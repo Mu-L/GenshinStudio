@@ -207,6 +207,7 @@ namespace AssetStudioGUI
                         case PlayerSettings m_PlayerSettings:
                             productName = m_PlayerSettings.productName;
                             break;
+                            /*
                         case AssetBundle m_AssetBundle:
                             foreach (var m_Container in m_AssetBundle.m_Container)
                             {
@@ -220,6 +221,7 @@ namespace AssetStudioGUI
                             }
                             assetItem.Text = m_AssetBundle.m_Name;
                             break;
+                            */
                         case ResourceManager m_ResourceManager:
                             foreach (var m_Container in m_ResourceManager.m_Container)
                             {
