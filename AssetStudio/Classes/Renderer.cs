@@ -79,6 +79,9 @@ namespace AssetStudio
                     var m_RendererPriority = reader.ReadInt32();
                 }
 
+                // ???
+                reader.ReadBytes(0xC);
+
                 var m_LightmapIndex = reader.ReadUInt16();
                 var m_LightmapIndexDynamic = reader.ReadUInt16();
             }
@@ -92,6 +95,9 @@ namespace AssetStudio
             {
                 var m_LightmapTilingOffsetDynamic = reader.ReadVector4();
             }
+
+            // ??? 
+            reader.ReadVector2();
 
             var m_MaterialsSize = reader.ReadInt32();
             m_Materials = new PPtr<Material>[m_MaterialsSize];

@@ -134,7 +134,10 @@ namespace AssetStudio
             ResourceReader resourceReader;
             if (!string.IsNullOrEmpty(m_StreamData?.path))
             {
-                resourceReader = new ResourceReader(m_StreamData.path, assetsFile, m_StreamData.offset, m_StreamData.size);
+                // no way in hell this is correct
+                reader.AlignStream();
+                resourceReader = new ResourceReader(reader, reader.BaseStream.Length - m_CompleteImageSize, m_CompleteImageSize);
+                //resourceReader = new ResourceReader(m_StreamData.path, assetsFile, m_StreamData.offset, m_StreamData.size);
             }
             else
             {

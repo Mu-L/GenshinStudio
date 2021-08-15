@@ -106,6 +106,7 @@ namespace AssetStudio
             m_Objects = new List<ObjectInfo>(objectCount);
             Objects = new List<Object>(objectCount);
             ObjectsDic = new Dictionary<long, Object>(objectCount);
+            //Logger.Info(String.Format("object count {0}", objectCount));
             for (int i = 0; i < objectCount; i++)
             {
                 var objectInfo = new ObjectInfo();
@@ -233,7 +234,11 @@ namespace AssetStudio
         {
             var type = new SerializedType();
 
-            type.classID = reader.ReadInt32();
+            // type.classID = reader.ReadInt32();
+            // see ASB_DecodeClassID
+            var buf = reader.ReadBytes(4);
+            Array.Reverse(buf);
+            type.classID = (BitConverter.ToInt32(buf, 0) ^ 0x23746FBE) - 3;
 
             if (header.m_Version >= SerializedFileFormatVersion.kRefactoredClassId)
             {

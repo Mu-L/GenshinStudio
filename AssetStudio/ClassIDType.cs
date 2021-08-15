@@ -226,6 +226,14 @@ namespace AssetStudio
         WorldAnchor = 362,
         OcclusionCullingData = 363,
         //kLargestRuntimeClassID = 364
+        // mihoyo start
+        MiHoYoGrassData = 601,
+        MiHoYoGrassBlock = 603,
+        MiHoYoGrassLand = 602,
+        MiHoYoVegetationInteractor = 604,
+        MiHoYoWindParameterConfigurator = 605,
+        MiHoYoGrassGlobalConfigurator = 606,
+        // mihoyo end
         SmallestEditorClassID = 1000,
         PrefabInstance = 1001,
         EditorExtensionImpl = 1002,
@@ -279,6 +287,18 @@ namespace AssetStudio
         BuildReport = 1125,
         PackedAssets = 1126,
         VideoClipImporter = 1127,
+        // mihoyo start
+        PlaneCullingOccluder = 1201,
+        BakedCollisionData = 1202,
+        ObjectInstanceCache = 1203,
+        MiHoYoLodLoader = 1204,
+        LODLevel = 1205,
+        MiHoYoLodMeshGroup = 1206,
+        MiHoYoInstanceColor = 1207,
+        MiHoYoBinData = 1208,
+        IndexObject = 1210,
+        MiHoYoTextureStreamingPreloader = 1211,
+        // mihoyo end
         ActivationLogComponent = 2000,
         //kLargestEditorClassID = 2001
         //kClassIdOutOfHierarchy = 100000

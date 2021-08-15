@@ -73,6 +73,9 @@ namespace AssetStudio
                 case FileType.WebFile:
                     LoadWebFile(reader);
                     break;
+                case FileType.BlkFile:
+                    LoadBlkFile(reader);
+                    break;
             }
         }
 
@@ -220,6 +223,30 @@ namespace AssetStudio
             }
         }
 
+        private void LoadBlkFile(FileReader reader)
+        {
+            Logger.Info("Loading " + reader.FileName);
+            try
+            {
+                var blkFile = new BlkFile(reader);
+                for (int i = 0; i < blkFile.Files.Count; i++)
+                {
+                    // TODO: proper dummyPath
+                    var dummyPath = Path.Combine(Path.GetDirectoryName(reader.FullPath), string.Format("{0}-asset{1}", reader.FileName, i));
+                    var subReader = new FileReader(dummyPath, new MemoryStream(blkFile.Files[i].Data));
+                    LoadAssetsFromMemory(subReader, dummyPath);
+                }
+            }
+            catch (Exception e)
+            {
+                Logger.Error($"Error while reading blk file {reader.FileName}", e);
+            }
+            finally
+            {
+                reader.Dispose();
+            }
+        }
+
         public void CheckStrippedVersion(SerializedFile assetsFile)
         {
             if (assetsFile.IsVersionStripped && string.IsNullOrEmpty(SpecifyUnityVersion))
@@ -350,6 +377,10 @@ namespace AssetStudio
                                 break;
                             case ClassIDType.ResourceManager:
                                 obj = new ResourceManager(objectReader);
+                                break;
+                            // mihoyo
+                            case ClassIDType.MiHoYoBinData:
+                                obj = new MiHoYoBinData(objectReader);
                                 break;
                             default:
                                 obj = new Object(objectReader);

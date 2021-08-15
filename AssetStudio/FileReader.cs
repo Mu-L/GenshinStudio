@@ -8,6 +8,7 @@ namespace AssetStudio
         public string FullPath;
         public string FileName;
         public FileType FileType;
+        public long Length;
 
         public FileReader(string path) : this(path, File.Open(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite)) { }
 
@@ -16,6 +17,7 @@ namespace AssetStudio
             FullPath = Path.GetFullPath(path);
             FileName = Path.GetFileName(path);
             FileType = CheckFileType();
+            Length = stream.Length;
         }
 
         private FileType CheckFileType()
@@ -31,6 +33,8 @@ namespace AssetStudio
                     return FileType.BundleFile;
                 case "UnityWebData1.0":
                     return FileType.WebFile;
+                case "blk":
+                    return FileType.BlkFile;
                 default:
                     {
                         var magic = ReadBytes(2);
@@ -83,9 +87,10 @@ namespace AssetStudio
                 m_DataOffset = ReadInt64();
             }
             Position = 0;
+            // ???
             if (m_FileSize != fileSize)
             {
-                return false;
+                //return false;
             }
             if (m_DataOffset > fileSize)
             {
