@@ -23,7 +23,7 @@ namespace AssetStudio
         public StaticBatchInfo m_StaticBatchInfo;
         public uint[] m_SubsetIndices;
 
-        protected Renderer(ObjectReader reader) : base(reader)
+        protected Renderer(ObjectReader reader, bool isSkinned = false) : base(reader)
         {
             if (version[0] < 5) //5.0 down
             {
@@ -80,7 +80,7 @@ namespace AssetStudio
                 }
 
                 // ???
-                reader.ReadBytes(0xC);
+                var unk1 = reader.ReadBytes(isSkinned ? 0xC : 0x10);
 
                 var m_LightmapIndex = reader.ReadUInt16();
                 var m_LightmapIndexDynamic = reader.ReadUInt16();
@@ -97,7 +97,7 @@ namespace AssetStudio
             }
 
             // ??? 
-            reader.ReadVector2();
+            var unk2 = reader.ReadVector2();
 
             var m_MaterialsSize = reader.ReadInt32();
             m_Materials = new PPtr<Material>[m_MaterialsSize];

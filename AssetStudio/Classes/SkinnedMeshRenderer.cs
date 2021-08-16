@@ -11,7 +11,7 @@ namespace AssetStudio
         public PPtr<Transform>[] m_Bones;
         public float[] m_BlendShapeWeights;
 
-        public SkinnedMeshRenderer(ObjectReader reader) : base(reader)
+        public SkinnedMeshRenderer(ObjectReader reader) : base(reader, true)
         {
             int m_Quality = reader.ReadInt32();
             var m_UpdateWhenOffscreen = reader.ReadBoolean();
@@ -24,7 +24,7 @@ namespace AssetStudio
             }
 
             // ???
-            reader.ReadInt64();
+            var unk1 = reader.ReadInt64();
 
             m_Mesh = new PPtr<Mesh>(reader);
 
