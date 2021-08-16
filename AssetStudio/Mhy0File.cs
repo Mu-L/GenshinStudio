@@ -1,4 +1,5 @@
 ﻿using Lz4;
+using SevenZip.Buffer;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -11,7 +12,9 @@ namespace AssetStudio
     public partial class Mhy0File
     {
         private byte[] _data = null;
+        private Guid _id = Guid.Empty;
         public byte[] Data => _data; 
+        public Guid ID => _id;
         private void Scramble2(byte[] input, int offset)
         {
             byte[] indexScramble = new byte[] {
@@ -103,8 +106,19 @@ namespace AssetStudio
             var decompressed = DecompressHeader(headerData);
             //File.WriteAllBytes("decompressed.bin", decompressed);
 
-            var cabCount = ReadScrambledInt2(decompressed, 0);
+            var cabCount = ReadScrambledInt2(decompressed, 0); // not the best name
             var entryCount = ReadScrambledInt2(decompressed, cabCount * 0x113 + 6);
+
+            var name = Encoding.UTF8.GetString(decompressed.Skip(6).TakeWhile(b => !b.Equals(0)).ToArray());
+            if (name.StartsWith("CAB-"))
+            {
+                //var id1 = Convert.ToUInt64(name.Substring(4, 16), 16);
+                //var id2 = Convert.ToUInt64(name.Substring(20, 16), 16);
+                //_id = id1 ^ id2;
+                //Console.WriteLine(name.Substring(4));
+                _id = new Guid(name.Substring(4));
+                //Console.WriteLine(_id);
+            }
 
             var compressedEntrySizes = new List<int>(entryCount);
             var decompressedEntrySizes = new List<int>(entryCount);
@@ -121,7 +135,8 @@ namespace AssetStudio
             for (int i = 0; i < entryCount; i++)
             {
                 var compressedEntry = reader.ReadBytes(compressedEntrySizes[i]);
-                Scramble(compressedEntry, 0, 0x21, 8);
+                if (compressedEntry.Length >= 0x21)
+                    Scramble(compressedEntry, 0, 0x21, 8);
 
                 var lz4 = new Lz4DecoderStream(new MemoryStream(compressedEntry, 0xC, compressedEntry.Length - 0xC));
                 lz4.Read(finalData, finalDataPos, decompressedEntrySizes[i]);

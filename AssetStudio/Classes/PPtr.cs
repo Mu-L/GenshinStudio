@@ -38,7 +38,15 @@ namespace AssetStudio
                     var name = m_External.fileName;
                     if (!assetsFileIndexCache.TryGetValue(name, out index))
                     {
-                        index = assetsFileList.FindIndex(x => x.fileName.Equals(name, StringComparison.OrdinalIgnoreCase));
+                        if (m_External.cabId == null)
+                            index = assetsFileList.FindIndex(x => x.fileName.Equals(name, StringComparison.OrdinalIgnoreCase));
+                        else
+                        {
+                            Console.WriteLine("checking for {0}", String.Format("{0}_{1}", name, m_External.cabId.ToString()));
+                            index = assetsFileList.FindIndex(
+                                x => x.fileName.Equals(String.Format("{0}_{1}", name, m_External.cabId.ToString()),
+                                StringComparison.OrdinalIgnoreCase));
+                        }
                         assetsFileIndexCache.Add(name, index);
                     }
                 }
@@ -50,6 +58,7 @@ namespace AssetStudio
                 }
             }
 
+            Logger.Warning(String.Format("couldn't resolve asset reference for file id {0} and path id {1}", m_FileID, m_PathID));
             return false;
         }
 

@@ -2,7 +2,9 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Text.RegularExpressions;
+using System.Xml.Linq;
 
 namespace AssetStudio
 {
@@ -197,6 +199,18 @@ namespace AssetStudio
                 }
                 m_External.pathName = reader.ReadStringToNull();
                 m_External.fileName = Path.GetFileName(m_External.pathName);
+
+                if (m_External.fileName.ToUpper().StartsWith("CAB-"))
+                {
+                    var name = m_External.fileName;
+                    var id = new Guid(name.Substring(4));
+                    if (assetsManager.cabMap.ContainsKey(id)) {
+                        m_External.pathName = assetsManager.cabMap[id];
+                        m_External.fileName = Path.GetFileName(m_External.pathName);
+                        m_External.cabId = id;
+                    }
+                }
+
                 m_Externals.Add(m_External);
             }
 

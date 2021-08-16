@@ -33,13 +33,10 @@ namespace AssetStudio
                 data[i] ^= xorpad[i & 0xFFF];
             //File.WriteAllBytes("decrypted.bin", data);
 
-            // TODO: do more than the first mhy0
             var memReader = new EndianBinaryReader(new MemoryStream(data), reader.endian);
             _files = new List<Mhy0File>();
             while (memReader.Position != memReader.BaseStream.Length)
-            {
                 _files.Add(new Mhy0File(memReader));
-            }
         }
 
         private byte XorCombine(byte[] input, int offset, int size = 16)

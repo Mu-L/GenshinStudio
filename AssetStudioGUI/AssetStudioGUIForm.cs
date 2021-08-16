@@ -107,6 +107,8 @@ namespace AssetStudioGUI
             Logger.Default = new ConsoleLogger();
             Progress.Default = new GUIProgress(SetProgressBarValue);
             Studio.StatusStripUpdate = StatusStripUpdate;
+
+            assetsManager.LoadCABMap();
         }
 
         private void AssetStudioGUIForm_DragEnter(object sender, DragEventArgs e)
@@ -2043,6 +2045,22 @@ namespace AssetStudioGUI
         private void toolStripMenuItem15_Click(object sender, EventArgs e)
         {
             logger.ShowErrorMessage = toolStripMenuItem15.Checked;
+        }
+
+        private async void buildCABMapToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            var openFolderDialog = new OpenFolderDialog();
+            // probably where most people have the game installed
+            openFolderDialog.InitialFolder = "C:\\Program Files\\Genshin Impact\\Genshin Impact game\\GenshinImpact_Data";
+            openFolderDialog.Title = "Select your GenshinImpact_Data folder";
+            if (openFolderDialog.ShowDialog(this) == DialogResult.OK)
+            {
+                Logger.Info("scanning for blks");
+                var blks = Directory.EnumerateFiles(openFolderDialog.Folder, "*.blk", SearchOption.AllDirectories).ToArray();
+                Logger.Info(String.Format("found {0} blks", blks.Length));
+
+                await Task.Run(() => assetsManager.BuildCABMap(blks));
+            }
         }
 
         private void glControl1_MouseWheel(object sender, MouseEventArgs e)

@@ -19,6 +19,89 @@ namespace AssetStudio
         private HashSet<string> importFilesHash = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         private HashSet<string> assetsFileListHash = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
+        public Dictionary<Guid, string> cabMap = new Dictionary<Guid, string>();
+
+        public void BuildCABMap(string[] blks)
+        {
+            // the cab map is comprised of an array of paths followed by a map of cab identifiers to indices into that path array
+            // it would be more correct to load only the required mhy0 from the .blk, but i'm lazy
+            // TODO: this should be moved into library code and not gui code, also should be made async
+            using (var mapFile = File.Create("cabMap.bin"))
+            {
+                using (var mapWriter = new BinaryWriter(mapFile))
+                {
+                    int collisions = 0;
+                    var cabMapInt = new Dictionary<Guid, int>();
+                    cabMap.Clear();
+                    mapWriter.Write(blks.Length);
+                    for (int i = 0; i < blks.Length; i++)
+                    {
+                        Logger.Info(String.Format("processing blk {0}/{1} ({2})", i + 1, blks.Length, blks[i]));
+                        Progress.Report(i + 1, blks.Length);
+                        mapWriter.Write(blks[i]);
+
+                        var blkFile = new BlkFile(new FileReader(blks[i]));
+                        foreach (var mhy0 in blkFile.Files)
+                        {
+                            if (mhy0.ID == Guid.Empty)
+                                continue;
+                            if (cabMap.ContainsKey(mhy0.ID))
+                            {
+                                //throw new InvalidDataException("mhy0 id collision found");
+                                // i don't think i can do much about this
+                                // colliding mhy0s appear to just contain the same data anyways...
+                                //Logger.Warning(String.Format("mhy0 id collision! {0} {1}", mhy0.ID, cabDuplicateMap[mhy0.ID]));
+                                collisions++;
+                                continue;
+                            }
+                            cabMapInt.Add(mhy0.ID, i);
+                            cabMap.Add(mhy0.ID, blks[i]);
+                        }
+                    }
+                    mapWriter.Write(cabMap.Count);
+                    foreach (var mapEntry in cabMapInt)
+                    {
+                        mapWriter.Write(mapEntry.Key.ToByteArray()); // ToByteArray has a weird order
+                        mapWriter.Write(mapEntry.Value);
+                    }
+                    Logger.Info(String.Format("finished processing {0} blks with {1} cabs and {2} id collisions", blks.Length, cabMap.Count, collisions));
+                }
+            }
+        }
+
+        public void LoadCABMap()
+        {
+            Logger.Info(String.Format("loading cab map"));
+            try
+            {
+                using (var mapFile = File.OpenRead("cabMap.bin"))
+                {
+                    using (var mapReader = new BinaryReader(mapFile))
+                    {
+                        cabMap.Clear();
+                        var blkCount = mapReader.ReadInt32();
+                        var blkPaths = new List<string>();
+                        for (int i = 0; i < blkCount; i++)
+                        {
+                            blkPaths.Add(mapReader.ReadString());
+                        }
+
+                        var mhy0Count = mapReader.ReadInt32();
+                        for (int i = 0; i < mhy0Count; i++)
+                        {
+                            cabMap.Add(new Guid(mapReader.ReadBytes(16)), blkPaths[mapReader.ReadInt32()]);
+                        }
+                        Logger.Info(String.Format("loaded cab map with {0} blks and {1} entries", blkCount, mhy0Count));
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                Logger.Error("couldn't load the cab map, please rebuild it");
+                Console.WriteLine(e.ToString());
+            }
+        }
+
         public void LoadFiles(params string[] files)
         {
             var path = Path.GetDirectoryName(files[0]);
@@ -127,7 +210,7 @@ namespace AssetStudio
             }
         }
 
-        private void LoadAssetsFromMemory(FileReader reader, string originalPath, string unityVersion = null)
+        private SerializedFile LoadAssetsFromMemory(FileReader reader, string originalPath, string unityVersion = null)
         {
             if (!assetsFileListHash.Contains(reader.FileName))
             {
@@ -142,6 +225,7 @@ namespace AssetStudio
                     CheckStrippedVersion(assetsFile);
                     assetsFileList.Add(assetsFile);
                     assetsFileListHash.Add(assetsFile.fileName);
+                    return assetsFile;
                 }
                 catch (Exception e)
                 {
@@ -149,6 +233,7 @@ namespace AssetStudio
                     resourceFileReaders.Add(reader.FileName, reader);
                 }
             }
+            return null;
         }
 
         private void LoadBundleFile(FileReader reader, string originalPath = null)
@@ -223,19 +308,68 @@ namespace AssetStudio
             }
         }
 
-        private void LoadBlkFile(FileReader reader)
+        private void LoadBlkFile(FileReader reader, Guid? targetId = null)
         {
-            Logger.Info("Loading " + reader.FileName);
+            if (targetId == null)
+                Logger.Info("Loading " + reader.FileName);
+            else
+                Logger.Info("Loading " + reader.FileName + " with target ID " + targetId.Value.ToString());
             try
             {
                 var blkFile = new BlkFile(reader);
+                bool targetFound = false;
                 for (int i = 0; i < blkFile.Files.Count; i++)
                 {
+                    //Console.WriteLine(blkFile.Files[i].ID);
+                    if (targetId.HasValue && targetId.Value != blkFile.Files[i].ID)
+                        continue;
+                    targetFound = true;
                     // TODO: proper dummyPath
-                    var dummyPath = Path.Combine(Path.GetDirectoryName(reader.FullPath), string.Format("{0}-asset{1}", reader.FileName, i));
+                    var dummyPath = Path.Combine(Path.GetDirectoryName(reader.FullPath),
+                        string.Format("{0}_{1}", reader.FileName, blkFile.Files[i].ID.ToString()));
                     var subReader = new FileReader(dummyPath, new MemoryStream(blkFile.Files[i].Data));
-                    LoadAssetsFromMemory(subReader, dummyPath);
+                    var asset = LoadAssetsFromMemory(subReader, dummyPath);
+                    if (asset == null)
+                    {
+                        //Logger.Error("what");
+                        continue;
+                    }
+                    foreach (var sharedFile in asset.m_Externals)
+                    {
+                        var sharedFileName = sharedFile.fileName;
+                        var sharedFileNameWithID = string.Format("{0}_{1}", sharedFileName, sharedFile.cabId.ToString());
+
+                        if (!sharedFileName.EndsWith(".blk"))
+                        {
+                            // this will directly load .blk files, so anything that isn't one is not supported
+                            Logger.Warning(String.Format("attempted to load non-blk shared file ({0})", sharedFileName));
+                            continue;
+                        }
+
+                        if (!importFilesHash.Contains(sharedFileNameWithID))
+                        {
+                            var sharedFilePath = Path.Combine(Path.GetDirectoryName(reader.FullPath), sharedFileName);
+                            if (!File.Exists(sharedFilePath))
+                            {
+                                var findFiles = Directory.GetFiles(Path.GetDirectoryName(reader.FullPath), sharedFileName, SearchOption.AllDirectories);
+                                if (findFiles.Length > 0)
+                                {
+                                    sharedFilePath = findFiles[0];
+                                }
+                            }
+
+                            if (File.Exists(sharedFilePath))
+                            {
+                                // TODO: proper integration with the loading bar
+                                LoadBlkFile(new FileReader(sharedFilePath), sharedFile.cabId);
+                                //importFiles.Add(sharedFilePath);
+                                importFilesHash.Add(sharedFileNameWithID);
+                            }
+                        }
+                    }
                 }
+                if (blkFile.Files.Count > 0 && !targetFound)
+                    Logger.Warning("failed to find target mhy0");
             }
             catch (Exception e)
             {
