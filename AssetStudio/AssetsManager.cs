@@ -517,6 +517,7 @@ namespace AssetStudio
                                 obj = new MiHoYoBinData(objectReader);
                                 break;
                             default:
+                                //Logger.Warning(String.Format("unhandled type {0}", objectReader.type.ToString()));
                                 obj = new Object(objectReader);
                                 break;
                         }

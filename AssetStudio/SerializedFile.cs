@@ -108,7 +108,7 @@ namespace AssetStudio
             m_Objects = new List<ObjectInfo>(objectCount);
             Objects = new List<Object>(objectCount);
             ObjectsDic = new Dictionary<long, Object>(objectCount);
-            //Logger.Info(String.Format("object count {0}", objectCount));
+            Logger.Info(String.Format("object count {0}", objectCount));
             for (int i = 0; i < objectCount; i++)
             {
                 var objectInfo = new ObjectInfo();

@@ -80,7 +80,8 @@ namespace AssetStudio
                 }
 
                 // ???
-                var unk1 = reader.ReadBytes(isSkinned ? 0xC : 0x10);
+                //var unk1 = reader.ReadBytes(isSkinned ? 0xC : 0x10);
+                var unk1 = reader.ReadBytes(0x10);
 
                 var m_LightmapIndex = reader.ReadUInt16();
                 var m_LightmapIndexDynamic = reader.ReadUInt16();

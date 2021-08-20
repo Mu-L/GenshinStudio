@@ -16,7 +16,7 @@ namespace AssetStudio
             m_Data = reader.ReadBytes((int)reader.byteSize);
         }
 
-        public new string Dump()
+        public override string Dump()
         {
             try
             {
