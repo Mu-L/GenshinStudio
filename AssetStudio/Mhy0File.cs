@@ -95,8 +95,9 @@ namespace AssetStudio
         public Mhy0File(EndianBinaryReader reader)
         {
             var originalPos = reader.Position;
-            // skip magic
-            reader.ReadBytes(4);
+            var magic = reader.ReadUInt32();
+            if (magic != 0x3079686D)
+                throw new Exception("not a mhy0");
             var headerSize = reader.ReadInt32();
             var headerData = reader.ReadBytes(headerSize);
 

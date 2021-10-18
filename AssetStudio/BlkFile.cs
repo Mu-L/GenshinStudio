@@ -36,7 +36,18 @@ namespace AssetStudio
             var memReader = new EndianBinaryReader(new MemoryStream(data), reader.endian);
             _files = new List<Mhy0File>();
             while (memReader.Position != memReader.BaseStream.Length)
-                _files.Add(new Mhy0File(memReader));
+            {
+                try
+                {
+                    _files.Add(new Mhy0File(memReader));
+                } catch (Exception ex)
+                {
+                    Console.WriteLine("Failed to load the mhy0, something went wrong! Please tell the author of the project about this.");
+                    Console.WriteLine("Exception: {0}", ex.Message);
+                    Console.WriteLine(ex.StackTrace);
+                    break;
+                }
+            }
         }
 
         private byte XorCombine(byte[] input, int offset, int size = 16)
