@@ -6,7 +6,6 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
-using System.Drawing.Imaging;
 using System.Drawing.Text;
 using System.Globalization;
 using System.IO;
@@ -19,17 +18,21 @@ using System.Timers;
 using System.Windows.Forms;
 using static AssetStudioGUI.Studio;
 using Font = AssetStudio.Font;
-using ImageFormat = AssetStudio.ImageFormat;
-using PixelFormat = System.Drawing.Imaging.PixelFormat;
+#if NET472
 using Vector3 = OpenTK.Vector3;
 using Vector4 = OpenTK.Vector4;
+#else
+using Vector3 = OpenTK.Mathematics.Vector3;
+using Vector4 = OpenTK.Mathematics.Vector4;
+using Matrix4 = OpenTK.Mathematics.Matrix4;
+#endif
 
 namespace AssetStudioGUI
 {
     partial class AssetStudioGUIForm : Form
     {
         private AssetItem lastSelectedItem;
-        private Bitmap imageTexture;
+        private DirectBitmap imageTexture;
         private string tempClipboard;
 
         private FMOD.System system;
@@ -202,7 +205,7 @@ namespace AssetStudioGUI
         {
             if (assetsManager.assetsFileList.Count == 0)
             {
-                StatusStripUpdate("No file was loaded.");
+                StatusStripUpdate("No Unity file can be loaded.");
                 return;
             }
 
@@ -393,7 +396,7 @@ namespace AssetStudioGUI
                         {
                             if (enablePreview.Checked && imageTexture != null)
                             {
-                                previewPanel.BackgroundImage = imageTexture;
+                                previewPanel.BackgroundImage = imageTexture.Bitmap;
                             }
                             else
                             {
@@ -756,10 +759,11 @@ namespace AssetStudioGUI
 
         private void PreviewTexture2D(AssetItem assetItem, Texture2D m_Texture2D)
         {
-            var stream = m_Texture2D.ConvertToStream(ImageFormat.Png, true);
-            if (stream != null)
+            var image = m_Texture2D.ConvertToImage(true);
+            if (image != null)
             {
-                var bitmap = new Bitmap(stream);
+                var bitmap = new DirectBitmap(image.ConvertToBgra32Bytes(), m_Texture2D.m_Width, m_Texture2D.m_Height);
+                image.Dispose();
                 assetItem.InfoText = $"Width: {m_Texture2D.m_Width}\nHeight: {m_Texture2D.m_Height}\nFormat: {m_Texture2D.m_TextureFormat}";
                 switch (m_Texture2D.m_TextureSettings.m_FilterMode)
                 {
@@ -787,13 +791,11 @@ namespace AssetStudioGUI
                     assetItem.InfoText += "None";
                 if (validChannel != 4)
                 {
-                    var bmpData = bitmap.LockBits(new Rectangle(0, 0, bitmap.Width, bitmap.Height), ImageLockMode.ReadWrite, PixelFormat.Format32bppArgb);
-                    var bytes = new byte[bitmap.Width * bitmap.Height * 4];
-                    Marshal.Copy(bmpData.Scan0, bytes, 0, bytes.Length);
-                    for (int i = 0; i < bmpData.Height; i++)
+                    var bytes = bitmap.Bits;
+                    for (int i = 0; i < bitmap.Height; i++)
                     {
-                        int offset = Math.Abs(bmpData.Stride) * i;
-                        for (int j = 0; j < bmpData.Width; j++)
+                        int offset = Math.Abs(bitmap.Stride) * i;
+                        for (int j = 0; j < bitmap.Width; j++)
                         {
                             bytes[offset] = textureChannels[0] ? bytes[offset] : validChannel == 1 && textureChannels[3] ? byte.MaxValue : byte.MinValue;
                             bytes[offset + 1] = textureChannels[1] ? bytes[offset + 1] : validChannel == 1 && textureChannels[3] ? byte.MaxValue : byte.MinValue;
@@ -802,8 +804,6 @@ namespace AssetStudioGUI
                             offset += 4;
                         }
                     }
-                    Marshal.Copy(bytes, 0, bmpData.Scan0, bytes.Length);
-                    bitmap.UnlockBits(bmpData);
                 }
                 PreviewTexture(bitmap);
 
@@ -1167,10 +1167,11 @@ namespace AssetStudioGUI
 
         private void PreviewSprite(AssetItem assetItem, Sprite m_Sprite)
         {
-            var stream = m_Sprite.GetImage(ImageFormat.Png);
-            if (stream != null)
+            var image = m_Sprite.GetImage();
+            if (image != null)
             {
-                var bitmap = new Bitmap(stream);
+                var bitmap = new DirectBitmap(image.ConvertToBgra32Bytes(), image.Width, image.Height);
+                image.Dispose();
                 assetItem.InfoText = $"Width: {bitmap.Width}\nHeight: {bitmap.Height}\n";
                 PreviewTexture(bitmap);
             }
@@ -1180,11 +1181,11 @@ namespace AssetStudioGUI
             }
         }
 
-        private void PreviewTexture(Bitmap bitmap)
+        private void PreviewTexture(DirectBitmap bitmap)
         {
             imageTexture?.Dispose();
             imageTexture = bitmap;
-            previewPanel.BackgroundImage = imageTexture;
+            previewPanel.BackgroundImage = imageTexture.Bitmap;
             if (imageTexture.Width > previewPanel.Width || imageTexture.Height > previewPanel.Height)
                 previewPanel.BackgroundImageLayout = ImageLayout.Zoom;
             else
@@ -1235,6 +1236,7 @@ namespace AssetStudioGUI
             classesListView.Groups.Clear();
             previewPanel.BackgroundImage = Properties.Resources.preview;
             imageTexture?.Dispose();
+            imageTexture = null;
             previewPanel.BackgroundImageLayout = ImageLayout.Center;
             assetInfoLabel.Visible = false;
             assetInfoLabel.Text = null;

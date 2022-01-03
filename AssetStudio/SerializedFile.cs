@@ -70,7 +70,7 @@ namespace AssetStudio
             // ReadMetadata
             if (m_FileEndianess == 0)
             {
-                reader.endian = EndianType.LittleEndian;
+                reader.Endian = EndianType.LittleEndian;
             }
             if (header.m_Version >= SerializedFileFormatVersion.kUnknown_7)
             {

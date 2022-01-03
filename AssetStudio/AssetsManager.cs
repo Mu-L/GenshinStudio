@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Text;
 using static AssetStudio.ImportHelper;
@@ -104,7 +105,7 @@ namespace AssetStudio
 
         public void LoadFiles(params string[] files)
         {
-            var path = Path.GetDirectoryName(files[0]);
+            var path = Path.GetDirectoryName(Path.GetFullPath(files[0]));
             MergeSplitAssets(path);
             var toReadFile = ProcessingSplitFiles(files.ToList());
             Load(toReadFile);
@@ -145,6 +146,11 @@ namespace AssetStudio
         private void LoadFile(string fullName)
         {
             var reader = new FileReader(fullName);
+            LoadFile(reader);
+        }
+
+        private void LoadFile(FileReader reader)
+        {
             switch (reader.FileType)
             {
                 case FileType.AssetsFile:
@@ -156,6 +162,15 @@ namespace AssetStudio
                 case FileType.WebFile:
                     LoadWebFile(reader);
                     break;
+                case FileType.GZipFile:
+                    LoadFile(DecompressGZip(reader));
+                    break;
+                case FileType.BrotliFile:
+                    LoadFile(DecompressBrotli(reader));
+                    break;
+                case FileType.ZipFile:
+                    LoadZipFile(reader);
+                    break;
                 case FileType.BlkFile:
                     LoadBlkFile(reader);
                     break;
@@ -166,7 +181,7 @@ namespace AssetStudio
         {
             if (!assetsFileListHash.Contains(reader.FileName))
             {
-                Logger.Info($"Loading {reader.FileName}");
+                Logger.Info($"Loading {reader.FullPath}");
                 try
                 {
                     var assetsFile = new SerializedFile(reader, this);
@@ -200,12 +215,13 @@ namespace AssetStudio
                 }
                 catch (Exception e)
                 {
-                    Logger.Error($"Error while reading assets file {reader.FileName}", e);
+                    Logger.Error($"Error while reading assets file {reader.FullPath}", e);
                     reader.Dispose();
                 }
             }
             else
             {
+                Logger.Info($"Skipping {reader.FullPath}");
                 reader.Dispose();
             }
         }
@@ -229,16 +245,18 @@ namespace AssetStudio
                 }
                 catch (Exception e)
                 {
-                    Logger.Error($"Error while reading assets file {reader.FileName} from {Path.GetFileName(originalPath)}", e);
+                    Logger.Error($"Error while reading assets file {reader.FullPath} from {Path.GetFileName(originalPath)}", e);
                     resourceFileReaders.Add(reader.FileName, reader);
                 }
             }
+            else
+                Logger.Info($"Skipping {originalPath} ({reader.FileName})");
             return null;
         }
 
         private void LoadBundleFile(FileReader reader, string originalPath = null)
         {
-            Logger.Info("Loading " + reader.FileName);
+            Logger.Info("Loading " + reader.FullPath);
             try
             {
                 var bundleFile = new BundleFile(reader);
@@ -258,7 +276,7 @@ namespace AssetStudio
             }
             catch (Exception e)
             {
-                var str = $"Error while reading bundle file {reader.FileName}";
+                var str = $"Error while reading bundle file {reader.FullPath}";
                 if (originalPath != null)
                 {
                     str += $" from {Path.GetFileName(originalPath)}";
@@ -273,7 +291,7 @@ namespace AssetStudio
 
         private void LoadWebFile(FileReader reader)
         {
-            Logger.Info("Loading " + reader.FileName);
+            Logger.Info("Loading " + reader.FullPath);
             try
             {
                 var webFile = new WebFile(reader);
@@ -300,7 +318,49 @@ namespace AssetStudio
             }
             catch (Exception e)
             {
-                Logger.Error($"Error while reading web file {reader.FileName}", e);
+                Logger.Error($"Error while reading web file {reader.FullPath}", e);
+            }
+            finally
+            {
+                reader.Dispose();
+            }
+        }
+
+        private void LoadZipFile(FileReader reader)
+        {
+            Logger.Info("Loading " + reader.FileName);
+            try
+            {
+                using (ZipArchive archive = new ZipArchive(reader.BaseStream, ZipArchiveMode.Read))
+                {
+                    foreach (ZipArchiveEntry entry in archive.Entries)
+                    {
+                        try
+                        {
+                            string dummyPath = Path.Combine(Path.GetDirectoryName(reader.FullPath), reader.FileName, entry.FullName);
+                            // create a new stream
+                            // - to store the deflated stream in
+                            // - to keep the data for later extraction
+                            Stream streamReader = new MemoryStream();
+                            using (Stream entryStream = entry.Open())
+                            {
+                                entryStream.CopyTo(streamReader);
+                            }
+                            streamReader.Position = 0;
+
+                            FileReader entryReader = new FileReader(dummyPath, streamReader);
+                            LoadFile(entryReader);
+                        }
+                        catch (Exception e)
+                        {
+                            Logger.Error($"Error while reading zip entry {entry.FullName}", e);
+                        }
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                Logger.Error($"Error while reading zip file {reader.FileName}", e);
             }
             finally
             {
@@ -528,6 +588,7 @@ namespace AssetStudio
                         var sb = new StringBuilder();
                         sb.AppendLine("Unable to load object")
                             .AppendLine($"Assets {assetsFile.fileName}")
+                            .AppendLine($"Path {assetsFile.originalPath}")
                             .AppendLine($"Type {objectReader.type}")
                             .AppendLine($"PathID {objectInfo.m_PathID}")
                             .Append(e);
@@ -579,6 +640,10 @@ namespace AssetStudio
                     }
                     else if (obj is SpriteAtlas m_SpriteAtlas)
                     {
+                        if (m_SpriteAtlas.m_IsVariant)
+                        {
+                            continue;
+                        }
                         foreach (var m_PackedSprite in m_SpriteAtlas.m_PackedSprites)
                         {
                             if (m_PackedSprite.TryGet(out var m_Sprite))
