@@ -139,7 +139,7 @@ namespace AssetStudio
                     Scramble(compressedEntry, 0, 0x21, 8);
 
                 LZ4Codec.Decode(new ReadOnlySpan<byte>(compressedEntry, 0xC, compressedEntry.Length - 0xC),
-                                new Span<byte>(decompressed, finalDataPos, decompressedEntrySizes[i]));
+                                new Span<byte>(finalData, finalDataPos, decompressedEntrySizes[i]));
                 finalDataPos += decompressedEntrySizes[i];
             }
 
