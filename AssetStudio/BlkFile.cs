@@ -16,7 +16,7 @@ namespace AssetStudio
         public BlkFile(FileReader reader)
         {
             // hopefully this doesn't break anything
-            reader.endian = EndianType.LittleEndian;
+            reader.Endian = EndianType.LittleEndian;
             // skip magic, unknown field
             reader.ReadBytes(8);
 
@@ -33,7 +33,7 @@ namespace AssetStudio
                 data[i] ^= xorpad[i & 0xFFF];
             //File.WriteAllBytes("decrypted.bin", data);
 
-            var memReader = new EndianBinaryReader(new MemoryStream(data), reader.endian);
+            var memReader = new EndianBinaryReader(new MemoryStream(data), reader.Endian);
             _files = new List<Mhy0File>();
             while (memReader.Position != memReader.BaseStream.Length)
             {
