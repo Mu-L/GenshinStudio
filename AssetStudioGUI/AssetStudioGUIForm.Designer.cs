@@ -822,20 +822,21 @@
             // 
             // FMODtimerLabel
             // 
+            this.FMODtimerLabel.AutoSize = true;
             this.FMODtimerLabel.ForeColor = System.Drawing.SystemColors.ControlLightLight;
-            this.FMODtimerLabel.Location = new System.Drawing.Point(404, 255);
+            this.FMODtimerLabel.Location = new System.Drawing.Point(460, 235);
             this.FMODtimerLabel.Name = "FMODtimerLabel";
-            this.FMODtimerLabel.Size = new System.Drawing.Size(155, 13);
+            this.FMODtimerLabel.Size = new System.Drawing.Size(95, 12);
             this.FMODtimerLabel.TabIndex = 7;
             this.FMODtimerLabel.Text = "0:00.0 / 0:00.0";
-            this.FMODtimerLabel.TextAlign = System.Drawing.ContentAlignment.TopRight;
             // 
             // FMODstatusLabel
             // 
+            this.FMODstatusLabel.AutoSize = true;
             this.FMODstatusLabel.ForeColor = System.Drawing.SystemColors.ControlLightLight;
             this.FMODstatusLabel.Location = new System.Drawing.Point(213, 255);
             this.FMODstatusLabel.Name = "FMODstatusLabel";
-            this.FMODstatusLabel.Size = new System.Drawing.Size(50, 13);
+            this.FMODstatusLabel.Size = new System.Drawing.Size(47, 12);
             this.FMODstatusLabel.TabIndex = 6;
             this.FMODstatusLabel.Text = "Stopped";
             // 
@@ -1083,9 +1084,7 @@
             // AssetStudioGUIForm
             // 
             this.AllowDrop = true;
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
-            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(1264, 738);
+            this.ClientSize = new System.Drawing.Size(1264, 681);
             this.Controls.Add(this.splitContainer1);
             this.Controls.Add(this.menuStrip1);
             this.Icon = global::AssetStudioGUI.Properties.Resources._as;

@@ -12,6 +12,9 @@ namespace AssetStudio
         BundleFile,
         WebFile,
         ResourceFile,
+        GZipFile,
+        BrotliFile,
+        ZipFile,
         BlkFile
     }
 }

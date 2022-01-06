@@ -415,7 +415,7 @@ namespace AssetStudioGUI
                             break;
                     }
                     exportPath += Path.DirectorySeparatorChar;
-                    StatusStripUpdate($"Exporting {asset.TypeString}: {asset.Text}");
+                    StatusStripUpdate($"[{exportedCount}/{toExportCount}] Exporting {asset.TypeString}: {asset.Text}");
                     try
                     {
                         switch (exportType)
@@ -459,7 +459,7 @@ namespace AssetStudioGUI
 
                 if (Properties.Settings.Default.openAfterExport && exportedCount > 0)
                 {
-                    Process.Start(savePath);
+                    OpenFolderInExplorer(savePath);
                 }
             });
         }
@@ -504,7 +504,7 @@ namespace AssetStudioGUI
 
                 if (Properties.Settings.Default.openAfterExport && toExportAssets.Count() > 0)
                 {
-                    Process.Start(savePath);
+                    OpenFolderInExplorer(savePath);
                 }
             });
         }
@@ -564,7 +564,7 @@ namespace AssetStudioGUI
                 }
                 if (Properties.Settings.Default.openAfterExport)
                 {
-                    Process.Start(savePath);
+                    OpenFolderInExplorer(savePath);
                 }
                 StatusStripUpdate("Finished");
             });
@@ -590,7 +590,7 @@ namespace AssetStudioGUI
                     ExportAnimator(animator, exportPath, animationList);
                     if (Properties.Settings.Default.openAfterExport)
                     {
-                        Process.Start(exportPath);
+                        OpenFolderInExplorer(exportPath);
                     }
                     Progress.Report(1, 1);
                     StatusStripUpdate($"Finished exporting {animator.Text}");
@@ -632,7 +632,7 @@ namespace AssetStudioGUI
                     }
                     if (Properties.Settings.Default.openAfterExport)
                     {
-                        Process.Start(exportPath);
+                        OpenFolderInExplorer(exportPath);
                     }
                 }
                 else
@@ -662,7 +662,7 @@ namespace AssetStudioGUI
                 }
                 if (Properties.Settings.Default.openAfterExport)
                 {
-                    Process.Start(Path.GetDirectoryName(exportPath));
+                    OpenFolderInExplorer(Path.GetDirectoryName(exportPath));
                 }
             });
         }
@@ -709,6 +709,13 @@ namespace AssetStudioGUI
                 str = m_MonoBehaviour.Dump(type);
             }
             return str;
+        }
+
+        public static void OpenFolderInExplorer(string path)
+        {
+            var info = new ProcessStartInfo(path);
+            info.UseShellExecute = true;
+            Process.Start(info);
         }
     }
 }

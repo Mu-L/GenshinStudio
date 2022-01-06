@@ -1,4 +1,4 @@
-﻿using Lz4;
+﻿using K4os.Compression.LZ4;
 using SevenZip.Buffer;
 using System;
 using System.Collections.Generic;
@@ -85,9 +85,8 @@ namespace AssetStudio
         {
             var decompressedSize = ReadScrambledInt1(data, 0x20);
             var decompressed = new byte[decompressedSize];
-
-            var lz4 = new Lz4DecoderStream(new MemoryStream(data, 0x27, data.Length - 0x27));
-            lz4.Read(decompressed, 0, decompressedSize);
+            LZ4Codec.Decode(new ReadOnlySpan<byte>(data, 0x27, data.Length - 0x27),
+                            new Span<byte>(decompressed));
 
             return decompressed;
         }
@@ -139,8 +138,8 @@ namespace AssetStudio
                 if (compressedEntry.Length >= 0x21)
                     Scramble(compressedEntry, 0, 0x21, 8);
 
-                var lz4 = new Lz4DecoderStream(new MemoryStream(compressedEntry, 0xC, compressedEntry.Length - 0xC));
-                lz4.Read(finalData, finalDataPos, decompressedEntrySizes[i]);
+                LZ4Codec.Decode(new ReadOnlySpan<byte>(compressedEntry, 0xC, compressedEntry.Length - 0xC),
+                                new Span<byte>(finalData, finalDataPos, decompressedEntrySizes[i]));
                 finalDataPos += decompressedEntrySizes[i];
             }
 

@@ -17,12 +17,15 @@ namespace AssetStudioGUI
                 var type = Properties.Settings.Default.convertType;
                 if (!TryExportFile(exportPath, item, "." + type.ToString().ToLower(), out var exportFullPath))
                     return false;
-                var stream = m_Texture2D.ConvertToStream(type, true);
-                if (stream == null)
+                var image = m_Texture2D.ConvertToImage(true);
+                if (image == null)
                     return false;
-                using (stream)
+                using (image)
                 {
-                    File.WriteAllBytes(exportFullPath, stream.ToArray());
+                    using (var file = File.OpenWrite(exportFullPath))
+                    {
+                        image.WriteToStream(file, type);
+                    }
                     return true;
                 }
             }
@@ -149,6 +152,7 @@ namespace AssetStudioGUI
             #region UV
             if (m_Mesh.m_UV0?.Length > 0)
             {
+                c = 4;
                 if (m_Mesh.m_UV0.Length == m_Mesh.m_VertexCount * 2)
                 {
                     c = 2;
@@ -229,12 +233,15 @@ namespace AssetStudioGUI
             var type = Properties.Settings.Default.convertType;
             if (!TryExportFile(exportPath, item, "." + type.ToString().ToLower(), out var exportFullPath))
                 return false;
-            var stream = ((Sprite)item.Asset).GetImage(type);
-            if (stream != null)
+            var image = ((Sprite)item.Asset).GetImage();
+            if (image != null)
             {
-                using (stream)
+                using (image)
                 {
-                    File.WriteAllBytes(exportFullPath, stream.ToArray());
+                    using (var file = File.OpenWrite(exportFullPath))
+                    {
+                        image.WriteToStream(file, type);
+                    }
                     return true;
                 }
             }
