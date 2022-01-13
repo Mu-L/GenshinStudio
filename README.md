@@ -18,3 +18,12 @@ First design used to support .blks dependencies directly, but now it's CAB- file
 
 Looking forward for feedback for issues/bugs to fix and update.
 _____________________________________________________________________________________________________________________________
+
+Some features are:
+- Export options added some stuff (exportable AssetBundle/IndexObject, on-the-fly key change)
+- Togglable debug console.
+- Container/filename recovery for MiHoYoBinData and other Assets
+- Ability to export MiHoYoBinData to .json directly if it's json format (like some stored configs in blks sometimes, need to set key to 0 to make sure it's original data).
+- Fixes to some classes to be able to parse it (AnimationClip/Mesh/Renderer/etc)
+
+_____________________________________________________________________________________________________________________________
