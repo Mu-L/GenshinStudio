@@ -634,7 +634,9 @@ namespace AssetStudio
             }
             if (version[0] < 2018 || (version[0] == 2018 && version[1] < 3)) //2018.3 down
             {
-                m_Binding = new ValueArrayConstant(reader);
+                //m_Binding = new ValueArrayConstant(reader);
+                reader.ReadBytes(reader.ReadInt32());
+                reader.AlignStream();
             }
         }
 
@@ -745,6 +747,8 @@ namespace AssetStudio
             }
             m_AverageSpeed = version[0] > 5 || (version[0] == 5 && version[1] >= 4) ? reader.ReadVector3() : (Vector3)reader.ReadVector4();//5.4 and up
             m_Clip = new Clip(reader);
+            reader.ReadInt32();
+            reader.ReadInt32();
             m_StartTime = reader.ReadSingle();
             m_StopTime = reader.ReadSingle();
             m_OrientationOffsetY = reader.ReadSingle();

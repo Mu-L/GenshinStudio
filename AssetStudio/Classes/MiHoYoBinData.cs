@@ -1,31 +1,87 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
+using System.Text.RegularExpressions;
+using Newtonsoft.Json.Linq;
+using Newtonsoft.Json;
 
 namespace AssetStudio
 {
+    public enum MiHoYoBinDataType
+    {
+        None,
+        Bytes,
+        JSON
+    }
     public sealed class MiHoYoBinData : Object
     {
-        byte[] m_Data = null;
+        public static byte Key;
+        public byte[] RawData;
+
+        public byte[] Data
+        {
+            get
+            {
+                byte[] bytes = new byte[RawData.Length];
+                for (int i = 0; i < RawData.Length; i++)
+                {
+                    bytes[i] = (byte)(RawData[i] ^ Key);
+                }
+                return bytes;
+            }
+        }
+
+        public string Str
+        {
+            get
+            {
+                var str = Encoding.UTF8.GetString(Data);
+                switch (Type)
+                {
+                    case MiHoYoBinDataType.JSON:
+                        return JToken.Parse(str).ToString(Formatting.Indented);
+                    case MiHoYoBinDataType.Bytes:
+                        return Regex.Replace(str, @"[^\u0020-\u007E]", string.Empty);
+                    default:
+                        return "";
+                }
+            }
+        }
+
+        public MiHoYoBinDataType Type
+        {
+            get
+            {
+                try
+                {
+                    var str = Encoding.UTF8.GetString(Data);
+                    var asToken = JToken.Parse(str);
+                    if (asToken.Type == JTokenType.Object || asToken.Type == JTokenType.Array)
+                        return MiHoYoBinDataType.JSON;
+                }
+                catch (Exception)
+                {
+                    return MiHoYoBinDataType.Bytes;
+                }
+                return MiHoYoBinDataType.None;
+            }
+        }
 
         public MiHoYoBinData(ObjectReader reader) : base(reader)
         {
-            m_Data = reader.ReadBytes((int)reader.byteSize);
+            var length = reader.ReadInt32();
+            RawData = reader.ReadBytes(length);
         }
 
-        public override string Dump()
+        public new dynamic Dump()
         {
-            try
+            switch (Type)
             {
-                return Encoding.UTF8.GetString(m_Data);
-            }
-            catch
-            {
-                Logger.Warning("couldn't encode bin data as string");
-                return null;
+                case MiHoYoBinDataType.JSON:
+                    return Str;
+                case MiHoYoBinDataType.Bytes:
+                    return Data;
+                default:
+                    return null;
             }
         }
     }

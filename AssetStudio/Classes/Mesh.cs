@@ -543,9 +543,7 @@ namespace AssetStudio
                     var m_KeepIndices = reader.ReadBoolean();
                 }
                 reader.AlignStream();
-
-                // ???
-                reader.ReadInt32();
+                reader.ReadInt32(); //unknown
 
                 //Unity fixed it in 2017.3.1p1 and later versions
                 if ((version[0] > 2017 || (version[0] == 2017 && version[1] >= 4)) || //2017.4

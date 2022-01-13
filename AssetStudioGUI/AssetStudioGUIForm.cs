@@ -11,7 +11,9 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Timers;
@@ -93,28 +95,67 @@ namespace AssetStudioGUI
         [DllImport("gdi32.dll")]
         private static extern IntPtr AddFontMemResourceEx(IntPtr pbFont, uint cbFont, IntPtr pdv, [In] ref uint pcFonts);
 
+        [DllImport("kernel32.dll", SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        static extern bool AllocConsole();
+        
+        [DllImport("kernel32.dll", SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        static extern bool SetConsoleTitle(string lpConsoleTitle);
+
+        [DllImport("kernel32.dll", SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        static extern bool FreeConsole();
+
+        [DllImport("kernel32.dll", SetLastError = true)]
+        static extern IntPtr GetConsoleWindow();
+
+        [DllImport("user32.dll", SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
+
+        const int SW_HIDE = 0;
+        const int SW_SHOW = 5;
         public AssetStudioGUIForm()
         {
             Thread.CurrentThread.CurrentCulture = new CultureInfo("en-US");
             InitializeComponent();
-            Text = $"AssetStudioGUI-blk v{Application.ProductVersion}";
+            Text = $"GenshinStudio v{Application.ProductVersion}";
             delayTimer = new System.Timers.Timer(800);
             delayTimer.Elapsed += new ElapsedEventHandler(delayTimer_Elapsed);
+            console.Checked = Properties.Settings.Default.console;
             displayAll.Checked = Properties.Settings.Default.displayAll;
             displayInfo.Checked = Properties.Settings.Default.displayInfo;
             enablePreview.Checked = Properties.Settings.Default.enablePreview;
+            AssetBundle.Exportable = Properties.Settings.Default.exportAssetBundle;
+            IndexObject.Exportable = Properties.Settings.Default.exportIndexObject;
+            MiHoYoBinData.Key = Properties.Settings.Default.key;
+            AllocConsole();
+            SetConsoleTitle("Debug Console");
             FMODinit();
 
             logger = new GUILogger(StatusStripUpdate);
-            //Logger.Default = logger;
-            Logger.Default = new ConsoleLogger();
+            var handle = GetConsoleWindow();
+            if (console.Checked)
+            {
+                Logger.Default = new ConsoleLogger();
+                ShowWindow(handle, SW_SHOW);
+            }
+            else
+            {
+                Logger.Default = logger;
+                ShowWindow(handle, SW_HIDE);
+            }
             Progress.Default = new GUIProgress(SetProgressBarValue);
             Studio.StatusStripUpdate = StatusStripUpdate;
-
             assetsManager.LoadCABMap();
         }
+        ~AssetStudioGUIForm()
+        {
+            FreeConsole();
+        }
 
-        private void AssetStudioGUIForm_DragEnter(object sender, DragEventArgs e)
+        private void GenshinStudioGUIForm_DragEnter(object sender, DragEventArgs e)
         {
             if (e.Data.GetDataPresent(DataFormats.FileDrop))
             {
@@ -122,7 +163,7 @@ namespace AssetStudioGUI
             }
         }
 
-        private async void AssetStudioGUIForm_DragDrop(object sender, DragEventArgs e)
+        private async void GenshinStudioGUIForm_DragDrop(object sender, DragEventArgs e)
         {
             var paths = (string[])e.Data.GetData(DataFormats.FileDrop);
             if (paths.Length > 0)
@@ -214,11 +255,11 @@ namespace AssetStudioGUI
 
             if (!string.IsNullOrEmpty(productName))
             {
-                Text = $"AssetStudioGUI-blk v{Application.ProductVersion} - {productName} - {assetsManager.assetsFileList[0].unityVersion} - {assetsManager.assetsFileList[0].m_TargetPlatform}";
+                Text = $"GenshinStudio v{Application.ProductVersion} - {productName} - {assetsManager.assetsFileList[0].unityVersion} - {assetsManager.assetsFileList[0].m_TargetPlatform}";
             }
             else
             {
-                Text = $"AssetStudioGUI-blk v{Application.ProductVersion} - no productName - {assetsManager.assetsFileList[0].unityVersion} - {assetsManager.assetsFileList[0].m_TargetPlatform}";
+                Text = $"GenshinStudio v{Application.ProductVersion} - no productName - {assetsManager.assetsFileList[0].unityVersion} - {assetsManager.assetsFileList[0].m_TargetPlatform}";
             }
 
             assetListView.VirtualListSize = visibleAssets.Count;
@@ -289,7 +330,7 @@ namespace AssetStudioGUI
             FilterAssetList();
         }
 
-        private void AssetStudioForm_KeyDown(object sender, KeyEventArgs e)
+        private void GenshinStudioForm_KeyDown(object sender, KeyEventArgs e)
         {
             if (glControl1.Visible)
             {
@@ -376,6 +417,24 @@ namespace AssetStudioGUI
 
                     StatusStripUpdate("Finished exporting class structures");
                 }
+            }
+        }
+
+        private void console_CheckedChanged(object sender, EventArgs e)
+        {
+            Properties.Settings.Default.console = console.Checked;
+            Properties.Settings.Default.Save();
+
+            var handle = GetConsoleWindow();
+            if (console.Checked)
+            {
+                Logger.Default = new ConsoleLogger();
+                ShowWindow(handle, SW_SHOW);
+            }
+            else
+            {
+                Logger.Default = logger;
+                ShowWindow(handle, SW_HIDE);
             }
         }
 
@@ -714,7 +773,8 @@ namespace AssetStudioGUI
                         PreviewAudioClip(assetItem, m_AudioClip);
                         break;
                     case Shader m_Shader:
-                        PreviewShader(m_Shader);
+                        //PreviewShader(m_Shader);
+                        StatusStripUpdate("Shaders are not supported.");
                         break;
                     case TextAsset m_TextAsset:
                         PreviewTextAsset(m_TextAsset);
@@ -740,6 +800,18 @@ namespace AssetStudioGUI
                         break;
                     case AnimationClip _:
                         StatusStripUpdate("Can be exported with Animator or Objects");
+                        break;
+                    case AssetBundle m_AssetBundle:
+                        PreviewAssetBundle(m_AssetBundle);
+                        StatusStripUpdate("Can be exported to JSON file.");
+                        break;
+                    case IndexObject m_IndexObject:
+                        PreviewIndexObject(m_IndexObject);
+                        StatusStripUpdate("Can be exported to JSON file.");
+                        break;
+                    case MiHoYoBinData m_MiHoYoBinData:
+                        PreviewMiHoYoBinData(m_MiHoYoBinData);
+                        StatusStripUpdate("Can be exported/previewed as JSON if data is a valid JSON (check XOR).");
                         break;
                     default:
                         var str = assetItem.Asset.Dump();
@@ -964,6 +1036,22 @@ namespace AssetStudioGUI
             }
             var str = JsonConvert.SerializeObject(obj, Formatting.Indented);
             PreviewText(str);
+        }
+        
+        private void PreviewAssetBundle(AssetBundle m_AssetBundle)
+        {
+            var str = JsonConvert.SerializeObject(m_AssetBundle, Formatting.Indented);
+            PreviewText(str);
+        }
+        private void PreviewIndexObject(IndexObject m_IndexObject)
+        {
+            var str = JsonConvert.SerializeObject(m_IndexObject, Formatting.Indented);
+            PreviewText(str);
+        }
+
+        private void PreviewMiHoYoBinData(MiHoYoBinData m_MiHoYoBinData)
+        {
+            PreviewText(m_MiHoYoBinData.Str);
         }
 
         private void PreviewFont(Font m_Font)
@@ -1224,7 +1312,7 @@ namespace AssetStudioGUI
 
         private void ResetForm()
         {
-            Text = $"AssetStudioGUI v{Application.ProductVersion}";
+            Text = $"GenshinStudio v{Application.ProductVersion}";
             assetsManager.Clear();
             assemblyLoader.Clear();
             exportableAssets.Clear();
@@ -2049,21 +2137,31 @@ namespace AssetStudioGUI
             logger.ShowErrorMessage = toolStripMenuItem15.Checked;
         }
 
-        private async void buildCABMapToolStripMenuItem_Click(object sender, EventArgs e)
+        private async void selectAIJSONToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            var openFolderDialog = new OpenFolderDialog();
-            // probably where most people have the game installed
-            openFolderDialog.InitialFolder = "C:\\Program Files\\Genshin Impact\\Genshin Impact game\\GenshinImpact_Data";
-            openFolderDialog.Title = "Select your GenshinImpact_Data folder";
-            if (openFolderDialog.ShowDialog(this) == DialogResult.OK)
+            var openFileDialog = new OpenFileDialog();
+            openFileDialog.Title = "Select AssetIndex serialized file (JSON)";
+            openFileDialog.Filter = "JSON File|*.json";
+            openFileDialog.Multiselect = false;
+            if (openFileDialog.ShowDialog(this) == DialogResult.OK)
             {
-                Logger.Info("scanning for blks");
-                var blks = Directory.EnumerateFiles(openFolderDialog.Folder, "*.blk", SearchOption.AllDirectories).ToArray();
-                Logger.Info(String.Format("found {0} blks", blks.Length));
-
-                await Task.Run(() => assetsManager.BuildCABMap(blks));
+                await Task.Run(() => assetsManager.LoadAIJSON(openFileDialog.FileName));
             }
         }
+
+        private async void selectBaseFolderToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            var openFolderDialog = new OpenFolderDialog();
+            openFolderDialog.Title = "Select GenshinImpact/YuanShen_Data Folder";
+            if (openFolderDialog.ShowDialog(this) == DialogResult.OK)
+            {                
+                Logger.Info("scanning for CAB files");
+                var files = Directory.EnumerateFiles(openFolderDialog.Folder, "CAB-*.*", SearchOption.AllDirectories);
+                Logger.Info(String.Format("found {0} CAB files", files.Count()));
+                await Task.Run(() => assetsManager.BuildCABMap(files));
+            }
+        }
+
 
         private void glControl1_MouseWheel(object sender, MouseEventArgs e)
         {

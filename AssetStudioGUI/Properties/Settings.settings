@@ -1,5 +1,5 @@
 ﻿<?xml version='1.0' encoding='utf-8'?>
-<SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="AssetStudioGUI.Properties" GeneratedClassName="Settings">
+<SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="GenshinStudioGUI.Properties" GeneratedClassName="Settings">
   <Profiles />
   <Settings>
     <Setting Name="displayAll" Type="System.Boolean" Scope="User">
@@ -64,6 +64,18 @@
     </Setting>
     <Setting Name="exportAllUvsAsDiffuseMaps" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="exportAssetBundle" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">True</Value>
+    </Setting>
+    <Setting Name="exportIndexObject" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">True</Value>
+    </Setting>
+    <Setting Name="key" Type="System.Byte" Scope="User">
+      <Value Profile="(Default)">147</Value>
+    </Setting>
+    <Setting Name="console" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">True</Value>
     </Setting>
   </Settings>
 </SettingsFile>

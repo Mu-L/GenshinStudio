@@ -26,7 +26,8 @@ namespace AssetStudio
 
     public sealed class ConsoleLogger : ILogger
     {
-        public void Log(LoggerEvent loggerEvent, string message) {
+        public void Log(LoggerEvent loggerEvent, string message)
+        {
             Console.WriteLine("[{0}] {1}", loggerEvent, message);
         }
     }

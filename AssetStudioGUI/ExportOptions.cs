@@ -23,6 +23,9 @@ namespace AssetStudioGUI
                 }
             }
             openAfterExport.Checked = Properties.Settings.Default.openAfterExport;
+            exportAssetBundle.Checked = Properties.Settings.Default.exportAssetBundle;
+            exportIndexObject.Checked = Properties.Settings.Default.exportIndexObject;
+            key.Value = Properties.Settings.Default.key;
             eulerFilter.Checked = Properties.Settings.Default.eulerFilter;
             filterPrecision.Value = Properties.Settings.Default.filterPrecision;
             exportAllNodes.Checked = Properties.Settings.Default.exportAllNodes;
@@ -53,6 +56,12 @@ namespace AssetStudioGUI
                 }
             }
             Properties.Settings.Default.openAfterExport = openAfterExport.Checked;
+            Properties.Settings.Default.exportAssetBundle = exportAssetBundle.Checked;
+            AssetBundle.Exportable = Properties.Settings.Default.exportAssetBundle;
+            Properties.Settings.Default.exportIndexObject = exportIndexObject.Checked;
+            IndexObject.Exportable = Properties.Settings.Default.exportAssetBundle;
+            Properties.Settings.Default.key = (byte)key.Value;
+            MiHoYoBinData.Key = (byte)key.Value;
             Properties.Settings.Default.eulerFilter = eulerFilter.Checked;
             Properties.Settings.Default.filterPrecision = filterPrecision.Value;
             Properties.Settings.Default.exportAllNodes = exportAllNodes.Checked;
@@ -75,6 +84,5 @@ namespace AssetStudioGUI
             DialogResult = DialogResult.Cancel;
             Close();
         }
-
     }
 }

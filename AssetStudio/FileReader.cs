@@ -36,10 +36,10 @@ namespace AssetStudio
                 case "UnityArchive":
                 case "UnityFS":
                     return FileType.BundleFile;
-                case "UnityWebData1.0":
-                    return FileType.WebFile;
                 case "blk":
                     return FileType.BlkFile;
+                case "UnityWebData1.0":
+                    return FileType.WebFile;
                 default:
                     {
                         byte[] magic = ReadBytes(2);
@@ -93,11 +93,10 @@ namespace AssetStudio
                 m_DataOffset = ReadInt64();
             }
             Position = 0;
-            // ???
-            if (m_FileSize != fileSize)
-            {
-                //return false;
-            }
+            //if (m_FileSize != fileSize)
+            //{
+            //    return false;
+            //}
             if (m_DataOffset > fileSize)
             {
                 return false;

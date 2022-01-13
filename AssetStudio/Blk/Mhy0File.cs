@@ -1,11 +1,9 @@
-﻿using K4os.Compression.LZ4;
-using SevenZip.Buffer;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
+using K4os.Compression.LZ4;
 
 namespace AssetStudio
 {
@@ -13,7 +11,7 @@ namespace AssetStudio
     {
         private byte[] _data = null;
         private Guid _id = Guid.Empty;
-        public byte[] Data => _data; 
+        public byte[] Data => _data;
         public Guid ID => _id;
         private void Scramble2(byte[] input, int offset)
         {
@@ -85,8 +83,13 @@ namespace AssetStudio
         {
             var decompressedSize = ReadScrambledInt1(data, 0x20);
             var decompressed = new byte[decompressedSize];
-            LZ4Codec.Decode(new ReadOnlySpan<byte>(data, 0x27, data.Length - 0x27),
-                            new Span<byte>(decompressed));
+
+
+            var numWrite = LZ4Codec.Decode(data, 0x27, data.Length - 0x27, decompressed, 0, decompressedSize);
+            if (numWrite != decompressedSize)
+                throw new IOException($"Lz4 decompression error, write {numWrite} bytes but expected {decompressedSize} bytes");
+            //var lz4 = new Lz4DecoderStream(new MemoryStream(data, 0x27, data.Length - 0x27));
+            //lz4.Read(decompressed, 0, decompressedSize);
 
             return decompressed;
         }
@@ -106,7 +109,7 @@ namespace AssetStudio
             var decompressed = DecompressHeader(headerData);
             //File.WriteAllBytes("decompressed.bin", decompressed);
 
-            var cabCount = ReadScrambledInt2(decompressed, 0); // not the best name
+            var cabCount = ReadScrambledInt2(decompressed, 0);
             var entryCount = ReadScrambledInt2(decompressed, cabCount * 0x113 + 6);
 
             var name = Encoding.UTF8.GetString(decompressed.Skip(6).TakeWhile(b => !b.Equals(0)).ToArray());
@@ -138,8 +141,11 @@ namespace AssetStudio
                 if (compressedEntry.Length >= 0x21)
                     Scramble(compressedEntry, 0, 0x21, 8);
 
-                LZ4Codec.Decode(new ReadOnlySpan<byte>(compressedEntry, 0xC, compressedEntry.Length - 0xC),
-                                new Span<byte>(finalData, finalDataPos, decompressedEntrySizes[i]));
+                var numWrite = LZ4Codec.Decode(compressedEntry, 0xC, compressedEntry.Length - 0xC, finalData, finalDataPos, decompressedEntrySizes[i]);
+                if (numWrite != decompressedEntrySizes[i])
+                    throw new IOException($"Lz4 decompression error, write {numWrite} bytes but expected {decompressedEntrySizes[i]} bytes");
+                //var lz4 = new Lz4DecoderStream(new MemoryStream(compressedEntry, 0xC, compressedEntry.Length - 0xC));
+                //lz4.Read(finalData, finalDataPos, decompressedEntrySizes[i]);
                 finalDataPos += decompressedEntrySizes[i];
             }
 

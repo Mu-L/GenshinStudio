@@ -9,11 +9,12 @@ namespace AssetStudio
     {
         public PPtr<Mesh> m_Mesh;
         public PPtr<Transform>[] m_Bones;
+        public PPtr<Transform> m_RootBone;
         public float[] m_BlendShapeWeights;
 
-        public SkinnedMeshRenderer(ObjectReader reader) : base(reader, true)
+        public SkinnedMeshRenderer(ObjectReader reader) : base(reader)
         {
-            int m_Quality = reader.ReadInt32();
+            //int m_Quality = reader.ReadInt32();
             var m_UpdateWhenOffscreen = reader.ReadBoolean();
             var m_SkinNormals = reader.ReadBoolean(); //3.1.0 and below
             reader.AlignStream();
@@ -23,9 +24,7 @@ namespace AssetStudio
                 var m_DisableAnimationWhenOffscreen = new PPtr<Animation>(reader);
             }
 
-            // ???
-            var unk1 = reader.ReadInt64();
-
+            //var unk1 = reader.ReadInt64();
             m_Mesh = new PPtr<Mesh>(reader);
 
             m_Bones = new PPtr<Transform>[reader.ReadInt32()];
@@ -33,11 +32,17 @@ namespace AssetStudio
             {
                 m_Bones[b] = new PPtr<Transform>(reader);
             }
+            reader.ReadInt32();
+            m_RootBone = new PPtr<Transform>(reader);
+            reader.ReadVector2();
+            reader.ReadInt32();
+            reader.ReadVector2();
+            reader.ReadInt32();
+            //if (version[0] > 4 || (version[0] == 4 && version[1] >= 3)) //4.3 and up
+            //{
+            //    m_BlendShapeWeights = reader.ReadSingleArray();
+            //}
 
-            if (version[0] > 4 || (version[0] == 4 && version[1] >= 3)) //4.3 and up
-            {
-                m_BlendShapeWeights = reader.ReadSingleArray();
-            }
         }
     }
 }

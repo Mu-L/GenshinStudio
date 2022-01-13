@@ -1,5 +1,6 @@
 ﻿using AssetStudio;
 using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -24,7 +25,7 @@ namespace AssetStudioGUI
                 {
                     using (var file = File.OpenWrite(exportFullPath))
                     {
-                        image.WriteToStream(file, type);
+                        image.WriteToStream(file, type);  
                     }
                     return true;
                 }
@@ -104,6 +105,58 @@ namespace AssetStudioGUI
             var str = JsonConvert.SerializeObject(type, Formatting.Indented);
             File.WriteAllText(exportFullPath, str);
             return true;
+        }
+        
+        public static bool ExportAssetBundle(AssetItem item, string exportPath)
+        {
+            if (!TryExportFile(exportPath, item, ".json", out var exportFullPath))
+                return false;
+            var m_AssetBundle = (AssetBundle)item.Asset;
+            var str = JsonConvert.SerializeObject(m_AssetBundle, Formatting.Indented);
+            File.WriteAllText(exportFullPath, str);
+            return true;
+        }
+
+        public static bool ExportIndexObject(AssetItem item, string exportPath)
+        {
+            if (!TryExportFile(exportPath, item, ".json", out var exportFullPath))
+                return false;
+            var m_IndexObject = (IndexObject)item.Asset;
+            var str = JsonConvert.SerializeObject(m_IndexObject, Formatting.Indented);
+            File.WriteAllText(exportFullPath, str);
+            return true;
+        }
+
+        public static bool ExportMiHoYoBinData(AssetItem item, string exportPath)
+        {
+            string exportFullPath;
+            if (item.Asset is MiHoYoBinData m_MiHoYoBinData)
+            {
+                switch (m_MiHoYoBinData.Type)
+                {
+                    case MiHoYoBinDataType.JSON:
+                        if (!TryExportFile(exportPath, item, ".json", out exportFullPath))
+                            return false;
+                        var json = m_MiHoYoBinData.Dump() as string;
+                        if (json.Length != 0)
+                        {
+                            File.WriteAllText(exportFullPath, json);
+                            return true;
+                        }
+                        break;
+                    case MiHoYoBinDataType.Bytes:
+                        if (!TryExportFile(exportPath, item, ".bin", out exportFullPath))
+                            return false;
+                        var bytes = m_MiHoYoBinData.Dump() as byte[];
+                        if (bytes.Length != 0)
+                        {
+                            File.WriteAllBytes(exportFullPath, bytes);
+                            return true;
+                        }
+                        break;
+                }
+            }
+            return false;
         }
 
         public static bool ExportFont(AssetItem item, string exportPath)
@@ -371,6 +424,12 @@ namespace AssetStudioGUI
                     return ExportAnimator(item, exportPath);
                 case ClassIDType.AnimationClip:
                     return false;
+                case ClassIDType.AssetBundle:
+                    return ExportAssetBundle(item, exportPath);
+                case ClassIDType.IndexObject:
+                    return ExportIndexObject(item, exportPath);
+                case ClassIDType.MiHoYoBinData:
+                    return ExportMiHoYoBinData(item, exportPath);
                 default:
                     return ExportRawFile(item, exportPath);
             }

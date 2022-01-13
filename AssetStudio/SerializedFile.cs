@@ -2,9 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Security.Cryptography;
 using System.Text.RegularExpressions;
-using System.Xml.Linq;
 
 namespace AssetStudio
 {
@@ -80,6 +78,7 @@ namespace AssetStudio
             if (header.m_Version >= SerializedFileFormatVersion.kUnknown_8)
             {
                 m_TargetPlatform = (BuildTarget)reader.ReadInt32();
+                if (m_TargetPlatform == BuildTarget.NoTarget) m_TargetPlatform = BuildTarget.StandaloneWindows64;
                 if (!Enum.IsDefined(typeof(BuildTarget), m_TargetPlatform))
                 {
                     m_TargetPlatform = BuildTarget.UnknownPlatform;
@@ -108,7 +107,6 @@ namespace AssetStudio
             m_Objects = new List<ObjectInfo>(objectCount);
             Objects = new List<Object>(objectCount);
             ObjectsDic = new Dictionary<long, Object>(objectCount);
-            Logger.Info(String.Format("object count {0}", objectCount));
             for (int i = 0; i < objectCount; i++)
             {
                 var objectInfo = new ObjectInfo();
@@ -199,18 +197,6 @@ namespace AssetStudio
                 }
                 m_External.pathName = reader.ReadStringToNull();
                 m_External.fileName = Path.GetFileName(m_External.pathName);
-
-                if (m_External.fileName.ToUpper().StartsWith("CAB-"))
-                {
-                    var name = m_External.fileName;
-                    var id = new Guid(name.Substring(4));
-                    if (assetsManager.cabMap.ContainsKey(id)) {
-                        m_External.pathName = assetsManager.cabMap[id];
-                        m_External.fileName = Path.GetFileName(m_External.pathName);
-                        m_External.cabId = id;
-                    }
-                }
-
                 m_Externals.Add(m_External);
             }
 
@@ -248,11 +234,14 @@ namespace AssetStudio
         {
             var type = new SerializedType();
 
-            // type.classID = reader.ReadInt32();
-            // see ASB_DecodeClassID
-            var buf = reader.ReadBytes(4);
-            Array.Reverse(buf);
-            type.classID = (BitConverter.ToInt32(buf, 0) ^ 0x23746FBE) - 3;
+            type.classID = reader.ReadInt32();
+
+            if ((type.classID > 0xFFFF || type.classID <= 0x0) && !Enum.IsDefined(typeof(ClassIDType), type.classID))
+            {
+                byte[] classIdBytes = BitConverter.GetBytes(type.classID);
+                Array.Reverse(classIdBytes);
+                type.classID = (BitConverter.ToInt32(classIdBytes, 0) ^ 0x23746FBE) - 3;
+            }
 
             if (header.m_Version >= SerializedFileFormatVersion.kRefactoredClassId)
             {

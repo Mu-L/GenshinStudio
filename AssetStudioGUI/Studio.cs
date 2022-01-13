@@ -77,6 +77,8 @@ namespace AssetStudioGUI
                 extractedCount += ExtractBundleFile(reader, savePath);
             else if (reader.FileType == FileType.WebFile)
                 extractedCount += ExtractWebDataFile(reader, savePath);
+            else if (reader.FileType == FileType.BlkFile)
+                extractedCount += ExtractBlkFile(reader, savePath);
             else
                 reader.Dispose();
             return extractedCount;
@@ -104,6 +106,32 @@ namespace AssetStudioGUI
             {
                 var extractPath = Path.Combine(savePath, reader.FileName + "_unpacked");
                 return ExtractStreamFile(extractPath, webFile.fileList);
+            }
+            return 0;
+        }
+
+        private static int ExtractBlkFile(FileReader reader, string savePath)
+        {
+            StatusStripUpdate($"Decompressing {reader.FileName} ...");
+
+            var blkFile = new BlkFile(reader);
+
+            reader.Dispose();
+            List<StreamFile> fileList = new List<StreamFile>();
+            foreach (var mhy0 in blkFile.Files)
+            {
+                var file = new StreamFile
+                {
+                    path = $"CAB-{mhy0.ID.ToString("N")}",
+                    fileName = $"CAB-{mhy0.ID.ToString("N")}",
+                    stream = new MemoryStream(mhy0.Data)
+                };
+                fileList.Add(file);
+            }
+            if (fileList.Count > 0)
+            {
+                var extractPath = Path.Combine(savePath, Path.GetFileNameWithoutExtension(reader.FileName));
+                return ExtractStreamFile(extractPath, fileList.ToArray());
             }
             return 0;
         }
@@ -207,7 +235,6 @@ namespace AssetStudioGUI
                         case PlayerSettings m_PlayerSettings:
                             productName = m_PlayerSettings.productName;
                             break;
-                            /*
                         case AssetBundle m_AssetBundle:
                             foreach (var m_Container in m_AssetBundle.m_Container)
                             {
@@ -216,17 +243,44 @@ namespace AssetStudioGUI
                                 var preloadEnd = preloadIndex + preloadSize;
                                 for (int k = preloadIndex; k < preloadEnd; k++)
                                 {
-                                    containers.Add((m_AssetBundle.m_PreloadTable[k], m_Container.Key));
+                                    var last = int.Parse(m_Container.Key);
+                                    var path = assetsManager.resourceIndex.GetBundlePath(last);
+                                    if (!string.IsNullOrEmpty(path)) containers.Add((m_AssetBundle.m_PreloadTable[k], path));
+                                    else containers.Add((m_AssetBundle.m_PreloadTable[k], m_Container.Key));
                                 }
                             }
                             assetItem.Text = m_AssetBundle.m_Name;
+                            exportable = AssetBundle.Exportable;
                             break;
-                            */
+                        case IndexObject m_IndexObject:
+                            assetItem.Text = "IndexObject";
+                            exportable = IndexObject.Exportable;
+                            break;
                         case ResourceManager m_ResourceManager:
                             foreach (var m_Container in m_ResourceManager.m_Container)
                             {
                                 containers.Add((m_Container.Value, m_Container.Key));
                             }
+                            break;
+                        case MiHoYoBinData m_MiHoYoBinData:
+                            if (m_MiHoYoBinData.assetsFile.ObjectsDic.TryGetValue(2, out var obj) && obj is IndexObject indexObject)
+                            {
+                                if (indexObject.Names.TryGetValue(m_MiHoYoBinData.m_PathID, out var binName))
+                                {
+                                    var last = int.Parse(binName, NumberStyles.HexNumber);
+                                    var name = assetsManager.resourceIndex.GetBundlePath(last);
+                                    if (!string.IsNullOrEmpty(name))
+                                    {
+                                        assetItem.Text = Path.GetFileName(name);
+                                    }
+                                    else
+                                    {
+                                        assetItem.Text = binName;
+                                    }
+                                } 
+                            }
+                            else assetItem.Text = string.Format("BinFile #{0}", assetItem.m_PathID);
+                            exportable = true;
                             break;
                         case NamedObject m_NamedObject:
                             assetItem.Text = m_NamedObject.m_Name;
@@ -393,11 +447,19 @@ namespace AssetStudioGUI
                         case 1: //container path
                             if (!string.IsNullOrEmpty(asset.Container))
                             {
-                                exportPath = Path.Combine(savePath, Path.GetDirectoryName(asset.Container));
+                                if (int.TryParse(asset.Container, out _))
+                                {
+                                    exportPath = Path.Combine(savePath, asset.Container);
+                                }
+                                else
+                                {
+                                    exportPath = Path.Combine(savePath, Path.GetDirectoryName(asset.Container));
+                                }
+                                
                             }
                             else
                             {
-                                exportPath = savePath;
+                                exportPath = Path.Combine(savePath, asset.TypeString);
                             }
                             break;
                         case 2: //source file

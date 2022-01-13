@@ -29,11 +29,9 @@ namespace AssetStudio
             if (Enum.IsDefined(typeof(ClassIDType), objectInfo.classID))
             {
                 type = (ClassIDType)objectInfo.classID;
-                //Logger.Info(String.Format("object type {0} ({1})", type, objectInfo.classID));
             }
             else
             {
-                Logger.Error(String.Format("unknown type {0}", objectInfo.classID));
                 type = ClassIDType.UnknownType;
             }
             serializedType = objectInfo.serializedType;
