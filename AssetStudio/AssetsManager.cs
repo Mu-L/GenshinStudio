@@ -144,16 +144,7 @@ namespace AssetStudio
 
         private void LoadFile(string fullName)
         {
-            var fileName = Path.GetFileNameWithoutExtension(fullName);
-            FileReader reader;
-            if (fileName.Contains('@'))
-            {
-                var split = fileName.Split('@');
-                fileName = split[0];
-                //var depName = split[1];
-                reader = new FileReader(Path.Combine(Path.GetDirectoryName(fullName), fileName + Path.GetExtension(fullName)));
-            }
-            else reader = new FileReader(fullName);
+            var reader = new FileReader(fullName);
             LoadFile(reader);
         }
 
