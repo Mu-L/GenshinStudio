@@ -11,15 +11,18 @@ ________________________________________________________________________________
 This is the release of AssetStudio-CAB, Modded AssetStudio that should work with Genshin Impact/YuanShen.
 
 How to use:
+
 1- Extract blks to a specific location (File -> Extract folder).                                                             
 2- Build CAB Map (Misc. -> Build CAB Map).
 3- Load AssetIndex file (Misc. -> Select AI JSON).
+
 First design used to support .blks dependencies directly, but now it's CAB- files for more reliable results with dependencies
 
 Looking forward for feedback for issues/bugs to fix and update.
 _____________________________________________________________________________________________________________________________
 
 Some features are:
+
 - Export options added some stuff (exportable AssetBundle/IndexObject, on-the-fly key change)
 - Togglable debug console.
 - Container/filename recovery for MiHoYoBinData and other Assets
