@@ -1103,7 +1103,7 @@
             this.console.ToolTipText = "Check this option to log all events on a debug console.";
             this.console.CheckedChanged += new System.EventHandler(this.console_CheckedChanged);
             // 
-            // GenshinStudioGUIForm
+            // AssetStudioGUIForm
             // 
             this.AllowDrop = true;
             this.ClientSize = new System.Drawing.Size(1264, 681);
@@ -1113,12 +1113,12 @@
             this.KeyPreview = true;
             this.MainMenuStrip = this.menuStrip1;
             this.MinimumSize = new System.Drawing.Size(620, 372);
-            this.Name = "GenshinStudioGUIForm";
+            this.Name = "AssetStudioGUIForm";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
-            this.Text = "GenshinStudioGUI";
-            this.DragDrop += new System.Windows.Forms.DragEventHandler(this.GenshinStudioGUIForm_DragDrop);
-            this.DragEnter += new System.Windows.Forms.DragEventHandler(this.GenshinStudioGUIForm_DragEnter);
-            this.KeyDown += new System.Windows.Forms.KeyEventHandler(this.GenshinStudioForm_KeyDown);
+            this.Text = "AssetStudioGUI";
+            this.DragDrop += new System.Windows.Forms.DragEventHandler(this.AssetStudioGUIForm_DragDrop);
+            this.DragEnter += new System.Windows.Forms.DragEventHandler(this.AssetStudioGUIForm_DragEnter);
+            this.KeyDown += new System.Windows.Forms.KeyEventHandler(this.AssetStudioForm_KeyDown);
             this.menuStrip1.ResumeLayout(false);
             this.menuStrip1.PerformLayout();
             this.splitContainer1.Panel1.ResumeLayout(false);

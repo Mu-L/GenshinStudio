@@ -120,7 +120,7 @@ namespace AssetStudioGUI
         {
             Thread.CurrentThread.CurrentCulture = new CultureInfo("en-US");
             InitializeComponent();
-            Text = $"GenshinStudio v{Application.ProductVersion}";
+            Text = $"AssetStudio-CAB v{Application.ProductVersion}";
             delayTimer = new System.Timers.Timer(800);
             delayTimer.Elapsed += new ElapsedEventHandler(delayTimer_Elapsed);
             console.Checked = Properties.Settings.Default.console;
@@ -155,7 +155,7 @@ namespace AssetStudioGUI
             FreeConsole();
         }
 
-        private void GenshinStudioGUIForm_DragEnter(object sender, DragEventArgs e)
+        private void AssetStudioGUIForm_DragEnter(object sender, DragEventArgs e)
         {
             if (e.Data.GetDataPresent(DataFormats.FileDrop))
             {
@@ -163,7 +163,7 @@ namespace AssetStudioGUI
             }
         }
 
-        private async void GenshinStudioGUIForm_DragDrop(object sender, DragEventArgs e)
+        private async void AssetStudioGUIForm_DragDrop(object sender, DragEventArgs e)
         {
             var paths = (string[])e.Data.GetData(DataFormats.FileDrop);
             if (paths.Length > 0)
@@ -255,11 +255,11 @@ namespace AssetStudioGUI
 
             if (!string.IsNullOrEmpty(productName))
             {
-                Text = $"GenshinStudio v{Application.ProductVersion} - {productName} - {assetsManager.assetsFileList[0].unityVersion} - {assetsManager.assetsFileList[0].m_TargetPlatform}";
+                Text = $"AssetStudio-CAB v{Application.ProductVersion} - {productName} - {assetsManager.assetsFileList[0].unityVersion} - {assetsManager.assetsFileList[0].m_TargetPlatform}";
             }
             else
             {
-                Text = $"GenshinStudio v{Application.ProductVersion} - no productName - {assetsManager.assetsFileList[0].unityVersion} - {assetsManager.assetsFileList[0].m_TargetPlatform}";
+                Text = $"AssetStudio-CAB v{Application.ProductVersion} - no productName - {assetsManager.assetsFileList[0].unityVersion} - {assetsManager.assetsFileList[0].m_TargetPlatform}";
             }
 
             assetListView.VirtualListSize = visibleAssets.Count;
@@ -330,7 +330,7 @@ namespace AssetStudioGUI
             FilterAssetList();
         }
 
-        private void GenshinStudioForm_KeyDown(object sender, KeyEventArgs e)
+        private void AssetStudioForm_KeyDown(object sender, KeyEventArgs e)
         {
             if (glControl1.Visible)
             {
@@ -1312,7 +1312,7 @@ namespace AssetStudioGUI
 
         private void ResetForm()
         {
-            Text = $"GenshinStudio v{Application.ProductVersion}";
+            Text = $"AssetStudio-CAB v{Application.ProductVersion}";
             assetsManager.Clear();
             assemblyLoader.Clear();
             exportableAssets.Clear();
