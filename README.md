@@ -12,7 +12,7 @@ This is the release of AssetStudio-CAB, Modded AssetStudio that should work with
 
 How to use:
 
-1- Extract blks to a specific location (File -> Extract folder).                                                             
+1- Extract blks to a specific location (File -> Extract folder).
 2- Build CAB Map (Misc. -> Build CAB Map).
 3- Load AssetIndex file (Misc. -> Select AI JSON).
 
