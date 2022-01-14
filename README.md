@@ -18,6 +18,7 @@ How to use:
 2- Build CAB Map (Misc. -> Build CAB Map).
 
 3- Load AssetIndex file (Misc. -> Select AI JSON).
+[NOTE: to obtain the .json file, use [this](https://github.com/Razmoth/AssetIndexReader) CLI tool with binary asset_index file, which can be found in 31049740.blk]
 ```
 
 First design used to support .blks dependencies directly, but now it's CAB- files for more reliable results with dependencies
