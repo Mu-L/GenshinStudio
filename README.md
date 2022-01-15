@@ -17,6 +17,8 @@ How to use:
 3. Load AssetIndex file (Misc. -> Select AI JSON).
 ```
 NOTE: to obtain the .json file, use [this](https://github.com/Razmoth/AssetIndexReader) CLI tool with binary asset_index file, which can be found in 31049740.blk.
+Extract it using `File -> Extract File` in [AssetStudio-CAB](https://github.com/Razmoth/AssetStudio-CAB), then used the resulted `.bin` file in this tool, should work.
+[Make sure key is set to 0 in `Export Options`]
 
 First design used to support .blks dependencies directly, but now it's CAB- files for more reliable results with dependencies
 
