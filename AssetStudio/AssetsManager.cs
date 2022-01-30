@@ -39,6 +39,7 @@ namespace AssetStudio
                     CABMap.Add(Path.GetFileNameWithoutExtension(file), file);
                 }
 
+                CABMap = CABMap.OrderBy(pair => pair.Value).ToDictionary(pair => pair.Key, pair => pair.Value);
                 var outputFile = new FileInfo(@"CABMap.bin");
 
                 using (var binaryFile = outputFile.Create())
@@ -70,7 +71,7 @@ namespace AssetStudio
                 {
                     var count = reader.ReadInt32();
                     CABMap = new Dictionary<string, string>(count);
-                    for (int i = 0; i < CABMap.Count; i++)
+                    for (int i = 0; i < count; i++)
                     {
                         var key = reader.ReadString();
                         var value = reader.ReadString();
@@ -158,9 +159,9 @@ namespace AssetStudio
                 case FileType.BundleFile:
                     LoadBundleFile(reader);
                     break;
-                //case FileType.BlkFile:
-                //    LoadBlkFile(reader);
-                //    break;
+                case FileType.BlkFile:
+                    LoadBlkFile(reader);
+                    break;
                 case FileType.WebFile:
                     LoadWebFile(reader);
                     break;
@@ -420,6 +421,29 @@ namespace AssetStudio
             catch (Exception e)
             {
                 Logger.Error($"Error while reading zip file {reader.FileName}", e);
+            }
+            finally
+            {
+                reader.Dispose();
+            }
+        }
+
+        private void LoadBlkFile(FileReader reader)
+        {
+            Logger.Info("Loading " + reader.FileName);
+            try
+            {
+                var blkFile = new BlkFile(reader);
+                for (int i = 0; i < blkFile.Files.Count; i++)
+                {
+                    var dummyPath = $"CAB-{blkFile.Files[i].ID.ToString("N")}";
+                    var subReader = new FileReader(dummyPath, new MemoryStream(blkFile.Files[i].Data));
+                    LoadAssetsFromMemory(subReader, dummyPath);
+                }
+            }
+            catch (Exception e)
+            {
+                Logger.Error($"Error while reading blk file {reader.FileName}", e);
             }
             finally
             {

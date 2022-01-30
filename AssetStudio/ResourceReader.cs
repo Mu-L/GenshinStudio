@@ -56,7 +56,8 @@ namespace AssetStudio
                     assetsFile.assetsManager.resourceFileReaders.Add(resourceFileName, reader);
                     return reader;
                 }
-                if (assetsFile.assetsManager.CABMap.TryGetValue(resourceFileName.Replace("cab", "CAB"), out resourceFilePath))
+                if (resourceFileName.Contains("cab")) resourceFileName.Replace("cab", "CAB");
+                if (assetsFile.assetsManager.CABMap.TryGetValue(resourceFileName, out resourceFilePath))
                 {
                     needSearch = false;
                     reader = new BinaryReader(File.OpenRead(resourceFilePath));

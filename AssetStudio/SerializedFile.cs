@@ -78,7 +78,6 @@ namespace AssetStudio
             if (header.m_Version >= SerializedFileFormatVersion.kUnknown_8)
             {
                 m_TargetPlatform = (BuildTarget)reader.ReadInt32();
-                if (m_TargetPlatform == BuildTarget.NoTarget) m_TargetPlatform = BuildTarget.StandaloneWindows64;
                 if (!Enum.IsDefined(typeof(BuildTarget), m_TargetPlatform))
                 {
                     m_TargetPlatform = BuildTarget.UnknownPlatform;
