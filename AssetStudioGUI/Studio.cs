@@ -35,6 +35,7 @@ namespace AssetStudioGUI
     internal static class Studio
     {
         public static AssetsManager assetsManager = new AssetsManager();
+        public static AIVersionManager versionManager = new AIVersionManager();
         public static AssemblyLoader assemblyLoader = new AssemblyLoader();
         public static List<AssetItem> exportableAssets = new List<AssetItem>();
         public static List<AssetItem> visibleAssets = new List<AssetItem>();
@@ -117,17 +118,7 @@ namespace AssetStudioGUI
             var blkFile = new BlkFile(reader);
 
             reader.Dispose();
-            List<StreamFile> fileList = new List<StreamFile>();
-            foreach (var mhy0 in blkFile.Files)
-            {
-                var file = new StreamFile
-                {
-                    path = $"CAB-{mhy0.ID.ToString("N")}",
-                    fileName = $"CAB-{mhy0.ID.ToString("N")}",
-                    stream = new MemoryStream(mhy0.Data)
-                };
-                fileList.Add(file);
-            }
+            var fileList = blkFile.Files.SelectMany(x => x.fileList).ToList();
             if (fileList.Count > 0)
             {
                 var extractPath = Path.Combine(savePath, Path.GetFileNameWithoutExtension(reader.FileName));
@@ -268,10 +259,11 @@ namespace AssetStudioGUI
                                 if (indexObject.Names.TryGetValue(m_MiHoYoBinData.m_PathID, out var binName))
                                 {
                                     var last = int.Parse(binName, NumberStyles.HexNumber);
-                                    var name = assetsManager.resourceIndex.GetBundlePath(last);
-                                    if (!string.IsNullOrEmpty(name))
+                                    var path = assetsManager.resourceIndex.GetBundlePath(last);
+                                    if (!string.IsNullOrEmpty(path))
                                     {
-                                        assetItem.Text = Path.GetFileName(name);
+                                        assetItem.Container = path;
+                                        assetItem.Text = Path.GetFileName(path);
                                     }
                                     else
                                     {

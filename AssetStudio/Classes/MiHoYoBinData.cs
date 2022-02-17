@@ -14,6 +14,7 @@ namespace AssetStudio
     }
     public sealed class MiHoYoBinData : Object
     {
+        public static bool doXOR;
         public static byte Key;
         public byte[] RawData;
 
@@ -21,12 +22,16 @@ namespace AssetStudio
         {
             get
             {
-                byte[] bytes = new byte[RawData.Length];
-                for (int i = 0; i < RawData.Length; i++)
+                if (doXOR)
                 {
-                    bytes[i] = (byte)(RawData[i] ^ Key);
+                    byte[] bytes = new byte[RawData.Length];
+                    for (int i = 0; i < RawData.Length; i++)
+                    {
+                        bytes[i] = (byte)(RawData[i] ^ Key);
+                    }
+                    return bytes;
                 }
-                return bytes;
+                else return RawData;
             }
         }
 

@@ -93,10 +93,10 @@ namespace AssetStudio
                 m_DataOffset = ReadInt64();
             }
             Position = 0;
-            //if (m_FileSize != fileSize)
-            //{
-            //    return false;
-            //}
+            if (m_FileSize != fileSize)
+            {
+                return false;
+            }
             if (m_DataOffset > fileSize)
             {
                 return false;

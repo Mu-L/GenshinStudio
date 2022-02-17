@@ -31,10 +31,11 @@ namespace AssetStudio
         public List<SerializedType> m_RefTypes;
         public string userInformation;
 
-        public SerializedFile(FileReader reader, AssetsManager assetsManager)
+        public SerializedFile(FileReader reader, AssetsManager assetsManager, string path = null)
         {
             this.assetsManager = assetsManager;
             this.reader = reader;
+            originalPath = path;
             fullName = reader.FullPath;
             fileName = reader.FileName;
 
@@ -195,7 +196,7 @@ namespace AssetStudio
                     m_External.guid = new Guid(reader.ReadBytes(16));
                     m_External.type = reader.ReadInt32();
                 }
-                m_External.pathName = reader.ReadStringToNull();
+                m_External.pathName = reader.ReadStringToNull().Replace("cab", "CAB");
                 m_External.fileName = Path.GetFileName(m_External.pathName);
                 m_Externals.Add(m_External);
             }

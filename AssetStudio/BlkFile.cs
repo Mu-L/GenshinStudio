@@ -13,16 +13,16 @@ namespace AssetStudio
         private List<Mhy0File> _files = null;
         public List<Mhy0File> Files => _files;
 
-        public BlkFile(FileReader reader)
+        public BlkFile(FileReader reader, long offset = -1)
         {
-            // hopefully this doesn't break anything
             reader.Endian = EndianType.LittleEndian;
-            // skip magic, unknown field
-            reader.ReadBytes(8);
+            var magic = reader.ReadUInt32();
+            if (magic != 0x006B6C62)
+                throw new Exception("not a blk");
 
-            var key = reader.ReadBytes(16);
-            // skip useless half of key
-            reader.ReadBytes(16);
+            var count = reader.ReadInt32();
+            var key = reader.ReadBytes(count);
+            reader.ReadBytes(count);
             BlkKeyScramble(key);
 
             var xorpadSize = reader.ReadUInt16();
@@ -31,21 +31,36 @@ namespace AssetStudio
             var xorpad = CreateDecryptVector(key, data, Math.Min(xorpadSize, (ushort)0x1000), 0x1000);
             for (int i = 0; i < data.Length; i++)
                 data[i] ^= xorpad[i & 0xFFF];
-            //File.WriteAllBytes("decrypted.bin", data);
 
             var memReader = new EndianBinaryReader(new MemoryStream(data), reader.Endian);
             _files = new List<Mhy0File>();
-            while (memReader.Position != memReader.BaseStream.Length)
+            if (offset != -1)
             {
                 try
                 {
-                    _files.Add(new Mhy0File(memReader));
-                } catch (Exception ex)
+                    memReader.Position = offset;
+                    _files.Add(new Mhy0File(memReader, reader.FullPath));
+                }
+                catch (Exception ex)
                 {
-                    Console.WriteLine("Failed to load a mhy0 in {0}, something went wrong! Please tell the author of the project about this.", reader.FullPath);
-                    Console.WriteLine("Exception: {0}", ex.Message);
-                    Console.WriteLine(ex.StackTrace);
-                    break;
+                    Logger.Warning($"Failed to load a mhy0 in {Path.GetFileName(reader.FullPath)}");
+                    Logger.Warning(ex.Message);
+                }
+            }
+            else
+            {
+                while (memReader.Position != memReader.BaseStream.Length)
+                {
+                    try
+                    {
+                        _files.Add(new Mhy0File(memReader, reader.FullPath));
+                    }
+                    catch (Exception ex)
+                    {
+                        Logger.Warning($"Failed to load a mhy0 in {Path.GetFileName(reader.FullPath)}");
+                        Logger.Warning(ex.Message);
+                        break;
+                    }
                 }
             }
         }

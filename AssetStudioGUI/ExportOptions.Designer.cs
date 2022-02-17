@@ -67,6 +67,7 @@
             this.groupBox3 = new System.Windows.Forms.GroupBox();
             this.key = new System.Windows.Forms.NumericUpDown();
             this.label7 = new System.Windows.Forms.Label();
+            this.enableXor = new System.Windows.Forms.CheckBox();
             this.groupBox1.SuspendLayout();
             this.panel1.SuspendLayout();
             this.groupBox2.SuspendLayout();
@@ -500,6 +501,7 @@
             // groupBox3
             // 
             this.groupBox3.AutoSize = true;
+            this.groupBox3.Controls.Add(this.enableXor);
             this.groupBox3.Controls.Add(this.key);
             this.groupBox3.Controls.Add(this.label7);
             this.groupBox3.Location = new System.Drawing.Point(12, 274);
@@ -512,7 +514,7 @@
             // key
             // 
             this.key.Hexadecimal = true;
-            this.key.Location = new System.Drawing.Point(51, 26);
+            this.key.Location = new System.Drawing.Point(135, 21);
             this.key.Maximum = new decimal(new int[] {
             255,
             0,
@@ -525,11 +527,23 @@
             // label7
             // 
             this.label7.AutoSize = true;
-            this.label7.Location = new System.Drawing.Point(20, 28);
+            this.label7.Location = new System.Drawing.Point(104, 23);
             this.label7.Name = "label7";
             this.label7.Size = new System.Drawing.Size(25, 13);
             this.label7.TabIndex = 7;
             this.label7.Text = "Key";
+            // 
+            // enableXor
+            // 
+            this.enableXor.AutoSize = true;
+            this.enableXor.Checked = true;
+            this.enableXor.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.enableXor.Location = new System.Drawing.Point(11, 22);
+            this.enableXor.Name = "enableXor";
+            this.enableXor.Size = new System.Drawing.Size(85, 17);
+            this.enableXor.TabIndex = 12;
+            this.enableXor.Text = "Enable XOR";
+            this.enableXor.UseVisualStyleBackColor = true;
             // 
             // ExportOptions
             // 
@@ -607,5 +621,6 @@
         private System.Windows.Forms.GroupBox groupBox3;
         private System.Windows.Forms.NumericUpDown key;
         private System.Windows.Forms.Label label7;
+        private System.Windows.Forms.CheckBox enableXor;
     }
 }

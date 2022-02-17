@@ -43,6 +43,8 @@
             this.displayInfo = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem14 = new System.Windows.Forms.ToolStripMenuItem();
             this.specifyUnityVersion = new System.Windows.Forms.ToolStripTextBox();
+            this.toolStripMenuItem16 = new System.Windows.Forms.ToolStripMenuItem();
+            this.specifyAIVersion = new System.Windows.Forms.ToolStripComboBox();
             this.showExpOpt = new System.Windows.Forms.ToolStripMenuItem();
             this.modelToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.exportAllObjectssplitToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
@@ -76,8 +78,10 @@
             this.debugMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem15 = new System.Windows.Forms.ToolStripMenuItem();
             this.exportClassStructuresMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.console = new System.Windows.Forms.ToolStripMenuItem();
             this.miscToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.selectAIJSONToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.buildBLKMapToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.buildCABMapToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
             this.tabControl1 = new System.Windows.Forms.TabControl();
@@ -129,7 +133,6 @@
             this.exportAnimatorwithselectedAnimationClipMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.goToSceneHierarchyToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.showOriginalFileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.console = new System.Windows.Forms.ToolStripMenuItem();
             this.menuStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
@@ -219,6 +222,7 @@
             this.enablePreview,
             this.displayInfo,
             this.toolStripMenuItem14,
+            this.toolStripMenuItem16,
             this.showExpOpt});
             this.optionsToolStripMenuItem.Name = "optionsToolStripMenuItem";
             this.optionsToolStripMenuItem.Size = new System.Drawing.Size(61, 20);
@@ -271,6 +275,24 @@
             this.specifyUnityVersion.Font = new System.Drawing.Font("Microsoft YaHei UI", 9F);
             this.specifyUnityVersion.Name = "specifyUnityVersion";
             this.specifyUnityVersion.Size = new System.Drawing.Size(100, 23);
+            // 
+            // toolStripMenuItem16
+            // 
+            this.toolStripMenuItem16.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.specifyAIVersion});
+            this.toolStripMenuItem16.Name = "toolStripMenuItem16";
+            this.toolStripMenuItem16.Size = new System.Drawing.Size(207, 22);
+            this.toolStripMenuItem16.Text = "Specify AI version";
+            // 
+            // specifyAIVersion
+            // 
+            this.specifyAIVersion.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.specifyAIVersion.Items.AddRange(new object[] {
+            "None"});
+            this.specifyAIVersion.Name = "specifyAIVersion";
+            this.specifyAIVersion.Size = new System.Drawing.Size(121, 23);
+            this.specifyAIVersion.Text = "None";
+            this.specifyAIVersion.SelectedIndexChanged += new System.EventHandler(this.toolStripComboBox1_SelectedIndexChanged);
             // 
             // showExpOpt
             // 
@@ -530,10 +552,22 @@
             this.exportClassStructuresMenuItem.Text = "Export class structures";
             this.exportClassStructuresMenuItem.Click += new System.EventHandler(this.exportClassStructuresMenuItem_Click);
             // 
+            // console
+            // 
+            this.console.Checked = true;
+            this.console.CheckOnClick = true;
+            this.console.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.console.Name = "console";
+            this.console.Size = new System.Drawing.Size(191, 22);
+            this.console.Text = "Enable Console";
+            this.console.ToolTipText = "Check this option to log all events on a debug console.";
+            this.console.CheckedChanged += new System.EventHandler(this.console_CheckedChanged);
+            // 
             // miscToolStripMenuItem
             // 
             this.miscToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.selectAIJSONToolStripMenuItem,
+            this.buildBLKMapToolStripMenuItem,
             this.buildCABMapToolStripMenuItem});
             this.miscToolStripMenuItem.Name = "miscToolStripMenuItem";
             this.miscToolStripMenuItem.Size = new System.Drawing.Size(47, 20);
@@ -542,16 +576,23 @@
             // selectAIJSONToolStripMenuItem
             // 
             this.selectAIJSONToolStripMenuItem.Name = "selectAIJSONToolStripMenuItem";
-            this.selectAIJSONToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.selectAIJSONToolStripMenuItem.Size = new System.Drawing.Size(151, 22);
             this.selectAIJSONToolStripMenuItem.Text = "Select AI JSON";
             this.selectAIJSONToolStripMenuItem.Click += new System.EventHandler(this.selectAIJSONToolStripMenuItem_Click);
+            // 
+            // buildBLKMapToolStripMenuItem
+            // 
+            this.buildBLKMapToolStripMenuItem.Name = "buildBLKMapToolStripMenuItem";
+            this.buildBLKMapToolStripMenuItem.Size = new System.Drawing.Size(151, 22);
+            this.buildBLKMapToolStripMenuItem.Text = "Build BLKMap";
+            this.buildBLKMapToolStripMenuItem.Click += new System.EventHandler(this.buildBLKMapToolStripMenuItem_Click);
             // 
             // buildCABMapToolStripMenuItem
             // 
             this.buildCABMapToolStripMenuItem.Name = "buildCABMapToolStripMenuItem";
-            this.buildCABMapToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
-            this.buildCABMapToolStripMenuItem.Text = "Build CAB Map";
-            this.buildCABMapToolStripMenuItem.Click += new System.EventHandler(this.selectBaseFolderToolStripMenuItem_Click);
+            this.buildCABMapToolStripMenuItem.Size = new System.Drawing.Size(151, 22);
+            this.buildCABMapToolStripMenuItem.Text = "Build CABMap";
+            this.buildCABMapToolStripMenuItem.Click += new System.EventHandler(this.buildCABMapToolStripMenuItem_Click);
             // 
             // splitContainer1
             // 
@@ -1092,17 +1133,6 @@
             this.showOriginalFileToolStripMenuItem.Visible = false;
             this.showOriginalFileToolStripMenuItem.Click += new System.EventHandler(this.showOriginalFileToolStripMenuItem_Click);
             // 
-            // console
-            // 
-            this.console.Checked = true;
-            this.console.CheckOnClick = true;
-            this.console.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.console.Name = "console";
-            this.console.Size = new System.Drawing.Size(191, 22);
-            this.console.Text = "Enable Console";
-            this.console.ToolTipText = "Check this option to log all events on a debug console.";
-            this.console.CheckedChanged += new System.EventHandler(this.console_CheckedChanged);
-            // 
             // AssetStudioGUIForm
             // 
             this.AllowDrop = true;
@@ -1251,8 +1281,11 @@
         private System.Windows.Forms.ToolStripMenuItem toolStripMenuItem15;
         private System.Windows.Forms.ToolStripMenuItem miscToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem selectAIJSONToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem buildCABMapToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem buildBLKMapToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem console;
+        private System.Windows.Forms.ToolStripMenuItem buildCABMapToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem toolStripMenuItem16;
+        private System.Windows.Forms.ToolStripComboBox specifyAIVersion;
     }
 }
 

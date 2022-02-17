@@ -4,6 +4,7 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 using static AssetStudio.ImportHelper;
 
 namespace AssetStudio
@@ -11,6 +12,8 @@ namespace AssetStudio
     public class AssetsManager
     {
         public string SpecifyUnityVersion;
+        public int BlkCount = 0;
+        public Dictionary<string, BlockInfo> BLKMap = new Dictionary<string, BlockInfo>();
         public Dictionary<string, string> CABMap = new Dictionary<string, string>();
         public List<SerializedFile> assetsFileList = new List<SerializedFile>();
         public ResourceIndex resourceIndex = new ResourceIndex();
@@ -22,12 +25,89 @@ namespace AssetStudio
         private HashSet<string> importFilesHash = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         private HashSet<string> assetsFileListHash = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
-        public void BuildCABMap(IEnumerable<string> files)
+        public void BuildBlkMap(IEnumerable<string> files)
         {
-            Logger.Info(String.Format("Building CABMap"));
+            Logger.Info(string.Format("Building BLKMap"));
             try
             {
                 var collision = 0;
+                var offsets = new List<long>();
+                BLKMap.Clear();
+                foreach (var file in files)
+                {
+                    var reader = new FileReader(file);
+                    var blkfile = new BlkFile(reader);
+                    foreach (var mhy0 in blkfile.Files)
+                    {
+                        foreach (var f in mhy0.fileList)
+                        {
+                            if (BLKMap.ContainsKey(f.path))
+                            {
+                                collision += 1;
+                                continue;
+                            }
+                            BLKMap.Add(f.path, new BlockInfo(file, mhy0.OriginalPos));
+                        }
+                    }
+
+                }
+
+                BLKMap = BLKMap.OrderBy(pair => pair.Value).ToDictionary(pair => pair.Key, pair => pair.Value);
+                var outputFile = new FileInfo(@"BLKMap.bin");
+
+                using (var binaryFile = outputFile.Create())
+                using (var writter = new BinaryWriter(binaryFile))
+                {
+                    writter.Write(BLKMap.Count);
+                    foreach (var cab in BLKMap)
+                    {
+                        writter.Write(cab.Key);
+                        writter.Write(cab.Value.Path);
+                        writter.Write(cab.Value.Offset);
+                    }
+                }
+                Logger.Info($"BLKMap build successfully with {collision} collisions !!");
+            }
+            catch (Exception e)
+            {
+                Logger.Error("BLKMap was not build");
+                Console.WriteLine(e.ToString());
+            }
+        }
+        public void LoadBlkMap()
+        {
+            Logger.Info(string.Format("Loading BLKMap"));
+            try
+            {
+                BLKMap.Clear();
+                using (var binaryFile = File.OpenRead("BLKMap.bin"))
+                using (var reader = new BinaryReader(binaryFile))
+                {
+                    var count = reader.ReadInt32();
+                    BLKMap = new Dictionary<string, BlockInfo>(count);
+                    for (int i = 0; i < count; i++)
+                    {
+                        var cab = reader.ReadString();
+                        var path = reader.ReadString();
+                        var offset = reader.ReadInt64();
+                        BLKMap.Add(cab, new BlockInfo(path, offset));
+                    }
+                }
+                Logger.Info(string.Format("Loaded BLKMap !!"));
+            }
+            catch (Exception e)
+            {
+                Logger.Error("BLKMap was not loaded");
+                Console.WriteLine(e.ToString());
+            }
+        }
+        public void BuildCABMap(IEnumerable<string> files)
+        {
+            Logger.Info(string.Format("Building CABMap"));
+            try
+            {
+                var collision = 0;
+                var offsets = new List<long>();
                 CABMap.Clear();
                 foreach (var file in files)
                 {
@@ -56,13 +136,13 @@ namespace AssetStudio
             }
             catch (Exception e)
             {
-                Logger.Error("CABmap was not build");
+                Logger.Error("CABMap was not build");
                 Console.WriteLine(e.ToString());
             }
         }
         public void LoadCABMap()
         {
-            Logger.Info(String.Format("Loading CABmap"));
+            Logger.Info(string.Format("Loading CABMap"));
             try
             {
                 CABMap.Clear();
@@ -78,7 +158,7 @@ namespace AssetStudio
                         CABMap.Add(key, value);
                     }
                 }
-                Logger.Info(String.Format("Loaded CABMap !!"));
+                Logger.Info(string.Format("Loaded CABMap !!"));
             }
             catch (Exception e)
             {
@@ -86,20 +166,18 @@ namespace AssetStudio
                 Console.WriteLine(e.ToString());
             }
         }
-        public void LoadAIJSON(string file)
+        public async Task<bool> LoadAIJSON(string file, bool isEgorFromat = false)
         {
-            Logger.Info(String.Format("Loading AssetIndex JSON"));
+            Logger.Info(string.Format("Loading AssetIndex JSON"));
             try
             {
-                string msg;
-                if (resourceIndex.FromFile(file)) msg = "AssetIndex loaded successfully !!";
-                else msg = "Error, invalid AssetIndex file !!";
-                Logger.Info(msg);
+                return await resourceIndex.FromFile(file, isEgorFromat);
             }
             catch (Exception e)
             {
                 Logger.Error("AssetIndex JSON was not loaded");
                 Console.WriteLine(e.ToString());
+                return false;
             }
         }
 
@@ -160,6 +238,7 @@ namespace AssetStudio
                     LoadBundleFile(reader);
                     break;
                 case FileType.BlkFile:
+                    BlkCount = 0;
                     LoadBlkFile(reader);
                     break;
                 case FileType.WebFile:
@@ -181,10 +260,10 @@ namespace AssetStudio
         {
             if (!assetsFileListHash.Contains(reader.FileName))
             {
-                Logger.Info($"Loading {reader.FullPath}");
+                Logger.Info($"Loading {reader.FileName}");
                 try
                 {
-                    var assetsFile = new SerializedFile(reader, this);
+                    var assetsFile = new SerializedFile(reader, this, reader.FullPath);
                     CheckStrippedVersion(assetsFile);
                     assetsFileList.Add(assetsFile);
                     assetsFileListHash.Add(assetsFile.fileName);
@@ -205,7 +284,7 @@ namespace AssetStudio
                                 }
                                 else
                                 {
-                                    CABMap.TryGetValue(sharedFileName.Replace("cab", "CAB"), out sharedFilePath);
+                                    CABMap.TryGetValue(sharedFileName, out sharedFilePath);
                                 }
                             }
 
@@ -428,17 +507,69 @@ namespace AssetStudio
             }
         }
 
-        private void LoadBlkFile(FileReader reader)
+        private void LoadBlkFile(FileReader reader, long offset = -1)
         {
-            Logger.Info("Loading " + reader.FileName);
+            if (offset == -1)
+                Logger.Info("Loading " + reader.FileName);
+            else
+                Logger.Info("Loading mhy0 in " + reader.FileName + " at " + string.Format("0x{0:x8}", offset));
             try
             {
-                var blkFile = new BlkFile(reader);
-                for (int i = 0; i < blkFile.Files.Count; i++)
+                BlkFile blkFile;
+                if (offset != -1)
+                    blkFile = new BlkFile(reader, offset);
+                else
+                    blkFile = new BlkFile(reader);
+                foreach (var mhy0 in blkFile.Files)
                 {
-                    var dummyPath = $"CAB-{blkFile.Files[i].ID.ToString("N")}";
-                    var subReader = new FileReader(dummyPath, new MemoryStream(blkFile.Files[i].Data));
-                    LoadAssetsFromMemory(subReader, dummyPath);
+                    foreach (var file in mhy0.fileList)
+                    {
+                        var dummyPath = Path.Combine(Path.GetDirectoryName(reader.FullPath), file.fileName);
+                        var subReader = new FileReader(dummyPath, file.stream);
+                        if (subReader.FileType == FileType.AssetsFile)
+                        {
+                            var assetsFile = new SerializedFile(subReader, this, reader.FullPath);
+                            CheckStrippedVersion(assetsFile);
+                            assetsFileList.Add(assetsFile);
+                            assetsFileListHash.Add(assetsFile.fileName);
+
+                            foreach (var sharedFile in assetsFile.m_Externals)
+                            {
+                                var sharedFileName = sharedFile.fileName;
+
+                                if (!importFilesHash.Contains(sharedFileName))
+                                {
+                                    var sharedFilePath = Path.Combine(Path.GetDirectoryName(reader.FullPath), sharedFileName);
+                                    var blockInfo = new BlockInfo();
+
+                                    if (!File.Exists(sharedFilePath))
+                                    {
+                                        var findFiles = Directory.GetFiles(Path.GetDirectoryName(reader.FullPath), sharedFileName, SearchOption.AllDirectories);
+                                        if (findFiles.Length > 0)
+                                        {
+                                            sharedFilePath = findFiles[0];
+                                        }
+                                        else
+                                        {
+                                            if (BLKMap.TryGetValue(sharedFileName, out blockInfo))
+                                                sharedFilePath = blockInfo.Path;
+                                        }
+                                    }
+
+                                    if (File.Exists(sharedFilePath))
+                                    {
+                                        LoadBlkFile(new FileReader(sharedFilePath), blockInfo.Offset);
+                                        Progress.Report(++BlkCount, assetsFileListHash.Count);
+                                        importFilesHash.Add(sharedFileName);
+                                    }
+                                }
+                            }
+                        }
+                        else
+                        {
+                            resourceFileReaders[file.fileName] = subReader; //TODO
+                        }
+                    }
                 }
             }
             catch (Exception e)

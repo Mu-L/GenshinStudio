@@ -8,17 +8,21 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace AssetStudioGUI.Properties {
-    
-    
+namespace AssetStudioGUI.Properties
+{
+
+
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.VisualStudio.Editors.SettingsDesigner.SettingsSingleFileGenerator", "16.10.0.0")]
-    internal sealed partial class Settings : global::System.Configuration.ApplicationSettingsBase {
-        
+    internal sealed partial class Settings : global::System.Configuration.ApplicationSettingsBase
+    {
+
         private static Settings defaultInstance = ((Settings)(global::System.Configuration.ApplicationSettingsBase.Synchronized(new Settings())));
-        
-        public static Settings Default {
-            get {
+
+        public static Settings Default
+        {
+            get
+            {
                 return defaultInstance;
             }
         }
@@ -41,95 +45,119 @@ namespace AssetStudioGUI.Properties {
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("False")]
-        public bool displayAll {
-            get {
+        public bool displayAll
+        {
+            get
+            {
                 return ((bool)(this["displayAll"]));
             }
-            set {
+            set
+            {
                 this["displayAll"] = value;
             }
         }
-        
+
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("True")]
-        public bool enablePreview {
-            get {
+        public bool enablePreview
+        {
+            get
+            {
                 return ((bool)(this["enablePreview"]));
             }
-            set {
+            set
+            {
                 this["enablePreview"] = value;
             }
         }
-        
+
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("True")]
-        public bool displayInfo {
-            get {
+        public bool displayInfo
+        {
+            get
+            {
                 return ((bool)(this["displayInfo"]));
             }
-            set {
+            set
+            {
                 this["displayInfo"] = value;
             }
         }
-        
+
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("True")]
-        public bool openAfterExport {
-            get {
+        public bool openAfterExport
+        {
+            get
+            {
                 return ((bool)(this["openAfterExport"]));
             }
-            set {
+            set
+            {
                 this["openAfterExport"] = value;
             }
         }
-        
+
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("0")]
-        public int assetGroupOption {
-            get {
+        public int assetGroupOption
+        {
+            get
+            {
                 return ((int)(this["assetGroupOption"]));
             }
-            set {
+            set
+            {
                 this["assetGroupOption"] = value;
             }
         }
-        
+
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("True")]
-        public bool convertTexture {
-            get {
+        public bool convertTexture
+        {
+            get
+            {
                 return ((bool)(this["convertTexture"]));
             }
-            set {
+            set
+            {
                 this["convertTexture"] = value;
             }
         }
-        
+
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("True")]
-        public bool convertAudio {
-            get {
+        public bool convertAudio
+        {
+            get
+            {
                 return ((bool)(this["convertAudio"]));
             }
-            set {
+            set
+            {
                 this["convertAudio"] = value;
             }
         }
-        
+
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("Png")]
-        public global::AssetStudio.ImageFormat convertType {
-            get {
+        public global::AssetStudio.ImageFormat convertType
+        {
+            get
+            {
                 return ((global::AssetStudio.ImageFormat)(this["convertType"]));
             }
-            set {
+            set
+            {
                 this["convertType"] = value;
             }
         }
@@ -182,155 +210,209 @@ namespace AssetStudioGUI.Properties {
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("True")]
-        public bool eulerFilter {
-            get {
+        public bool enableXor
+        {
+            get
+            {
+                return ((bool)(this["enableXor"]));
+            }
+            set
+            {
+                this["enableXor"] = value;
+            }
+        }
+
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool eulerFilter
+        {
+            get
+            {
                 return ((bool)(this["eulerFilter"]));
             }
-            set {
+            set
+            {
                 this["eulerFilter"] = value;
             }
         }
-        
+
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("0.25")]
-        public decimal filterPrecision {
-            get {
+        public decimal filterPrecision
+        {
+            get
+            {
                 return ((decimal)(this["filterPrecision"]));
             }
-            set {
+            set
+            {
                 this["filterPrecision"] = value;
             }
         }
-        
+
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("True")]
-        public bool exportAllNodes {
-            get {
+        public bool exportAllNodes
+        {
+            get
+            {
                 return ((bool)(this["exportAllNodes"]));
             }
-            set {
+            set
+            {
                 this["exportAllNodes"] = value;
             }
         }
-        
+
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("True")]
-        public bool exportSkins {
-            get {
+        public bool exportSkins
+        {
+            get
+            {
                 return ((bool)(this["exportSkins"]));
             }
-            set {
+            set
+            {
                 this["exportSkins"] = value;
             }
         }
-        
+
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("True")]
-        public bool exportAnimations {
-            get {
+        public bool exportAnimations
+        {
+            get
+            {
                 return ((bool)(this["exportAnimations"]));
             }
-            set {
+            set
+            {
                 this["exportAnimations"] = value;
             }
         }
-        
+
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("10")]
-        public decimal boneSize {
-            get {
+        public decimal boneSize
+        {
+            get
+            {
                 return ((decimal)(this["boneSize"]));
             }
-            set {
+            set
+            {
                 this["boneSize"] = value;
             }
         }
-        
+
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("3")]
-        public int fbxVersion {
-            get {
+        public int fbxVersion
+        {
+            get
+            {
                 return ((int)(this["fbxVersion"]));
             }
-            set {
+            set
+            {
                 this["fbxVersion"] = value;
             }
         }
-        
+
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("0")]
-        public int fbxFormat {
-            get {
+        public int fbxFormat
+        {
+            get
+            {
                 return ((int)(this["fbxFormat"]));
             }
-            set {
+            set
+            {
                 this["fbxFormat"] = value;
             }
         }
-        
+
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("1")]
-        public decimal scaleFactor {
-            get {
+        public decimal scaleFactor
+        {
+            get
+            {
                 return ((decimal)(this["scaleFactor"]));
             }
-            set {
+            set
+            {
                 this["scaleFactor"] = value;
             }
         }
-        
+
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("True")]
-        public bool exportBlendShape {
-            get {
+        public bool exportBlendShape
+        {
+            get
+            {
                 return ((bool)(this["exportBlendShape"]));
             }
-            set {
+            set
+            {
                 this["exportBlendShape"] = value;
             }
         }
-        
+
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("False")]
-        public bool castToBone {
-            get {
+        public bool castToBone
+        {
+            get
+            {
                 return ((bool)(this["castToBone"]));
             }
-            set {
+            set
+            {
                 this["castToBone"] = value;
             }
         }
-        
+
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("True")]
-        public bool restoreExtensionName {
-            get {
+        public bool restoreExtensionName
+        {
+            get
+            {
                 return ((bool)(this["restoreExtensionName"]));
             }
-            set {
+            set
+            {
                 this["restoreExtensionName"] = value;
             }
         }
-        
+
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("False")]
-        public bool exportAllUvsAsDiffuseMaps {
-            get {
+        public bool exportAllUvsAsDiffuseMaps
+        {
+            get
+            {
                 return ((bool)(this["exportAllUvsAsDiffuseMaps"]));
             }
-            set {
+            set
+            {
                 this["exportAllUvsAsDiffuseMaps"] = value;
             }
         }

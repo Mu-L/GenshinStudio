@@ -26,6 +26,7 @@ namespace AssetStudioGUI
             exportAssetBundle.Checked = Properties.Settings.Default.exportAssetBundle;
             exportIndexObject.Checked = Properties.Settings.Default.exportIndexObject;
             key.Value = Properties.Settings.Default.key;
+            enableXor.Checked = Properties.Settings.Default.enableXor;
             eulerFilter.Checked = Properties.Settings.Default.eulerFilter;
             filterPrecision.Value = Properties.Settings.Default.filterPrecision;
             exportAllNodes.Checked = Properties.Settings.Default.exportAllNodes;
@@ -61,7 +62,9 @@ namespace AssetStudioGUI
             Properties.Settings.Default.exportIndexObject = exportIndexObject.Checked;
             IndexObject.Exportable = Properties.Settings.Default.exportAssetBundle;
             Properties.Settings.Default.key = (byte)key.Value;
+            Properties.Settings.Default.enableXor = enableXor.Checked;
             MiHoYoBinData.Key = (byte)key.Value;
+            MiHoYoBinData.doXOR = enableXor.Checked;
             Properties.Settings.Default.eulerFilter = eulerFilter.Checked;
             Properties.Settings.Default.filterPrecision = filterPrecision.Value;
             Properties.Settings.Default.exportAllNodes = exportAllNodes.Checked;

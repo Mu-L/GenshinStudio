@@ -120,7 +120,7 @@ namespace AssetStudioGUI
         {
             Thread.CurrentThread.CurrentCulture = new CultureInfo("en-US");
             InitializeComponent();
-            Text = $"AssetStudio-CAB v{Application.ProductVersion}";
+            Text = $"GenshinStudio v{Application.ProductVersion}";
             delayTimer = new System.Timers.Timer(800);
             delayTimer.Elapsed += new ElapsedEventHandler(delayTimer_Elapsed);
             console.Checked = Properties.Settings.Default.console;
@@ -129,6 +129,7 @@ namespace AssetStudioGUI
             enablePreview.Checked = Properties.Settings.Default.enablePreview;
             AssetBundle.Exportable = Properties.Settings.Default.exportAssetBundle;
             IndexObject.Exportable = Properties.Settings.Default.exportIndexObject;
+            MiHoYoBinData.doXOR = Properties.Settings.Default.enableXor;
             MiHoYoBinData.Key = Properties.Settings.Default.key;
             AllocConsole();
             SetConsoleTitle("Debug Console");
@@ -148,6 +149,8 @@ namespace AssetStudioGUI
             }
             Progress.Default = new GUIProgress(SetProgressBarValue);
             Studio.StatusStripUpdate = StatusStripUpdate;
+            specifyAIVersion.Items.AddRange(versionManager.GetVersions());
+            assetsManager.LoadBlkMap();
             assetsManager.LoadCABMap();
         }
         ~AssetStudioGUIForm()
@@ -255,11 +258,11 @@ namespace AssetStudioGUI
 
             if (!string.IsNullOrEmpty(productName))
             {
-                Text = $"AssetStudio-CAB v{Application.ProductVersion} - {productName} - {assetsManager.assetsFileList[0].unityVersion} - {assetsManager.assetsFileList[0].m_TargetPlatform}";
+                Text = $"GenshinStudio v{Application.ProductVersion} - {productName} - {assetsManager.assetsFileList[0].unityVersion} - {assetsManager.assetsFileList[0].m_TargetPlatform}";
             }
             else
             {
-                Text = $"AssetStudio-CAB v{Application.ProductVersion} - no productName - {assetsManager.assetsFileList[0].unityVersion} - {assetsManager.assetsFileList[0].m_TargetPlatform}";
+                Text = $"GenshinStudio v{Application.ProductVersion} - no productName - {assetsManager.assetsFileList[0].unityVersion} - {assetsManager.assetsFileList[0].m_TargetPlatform}";
             }
 
             assetListView.VirtualListSize = visibleAssets.Count;
@@ -1312,7 +1315,7 @@ namespace AssetStudioGUI
 
         private void ResetForm()
         {
-            Text = $"AssetStudio-CAB v{Application.ProductVersion}";
+            Text = $"GenshinStudio v{Application.ProductVersion}";
             assetsManager.Clear();
             assemblyLoader.Clear();
             exportableAssets.Clear();
@@ -2149,19 +2152,72 @@ namespace AssetStudioGUI
             }
         }
 
-        private async void selectBaseFolderToolStripMenuItem_Click(object sender, EventArgs e)
+        private async void buildBLKMapToolStripMenuItem_Click(object sender, EventArgs e)
         {
             var openFolderDialog = new OpenFolderDialog();
             openFolderDialog.Title = "Select GenshinImpact/YuanShen_Data Folder";
             if (openFolderDialog.ShowDialog(this) == DialogResult.OK)
-            {                
+            {
+                Logger.Info("scanning for BLK files");
+                var files = Directory.EnumerateFiles(openFolderDialog.Folder, "*.blk", SearchOption.AllDirectories);
+                Logger.Info(string.Format("found {0} BLK files", files.Count()));
+                await Task.Run(() => assetsManager.BuildBlkMap(files));
+            }
+        }
+
+        private async void buildCABMapToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            var openFolderDialog = new OpenFolderDialog();
+            openFolderDialog.Title = "Select GenshinImpact/YuanShen_Data Folder";
+            if (openFolderDialog.ShowDialog(this) == DialogResult.OK)
+            {
                 Logger.Info("scanning for CAB files");
-                var files = Directory.EnumerateFiles(openFolderDialog.Folder, "CAB-*.*", SearchOption.AllDirectories);
-                Logger.Info(String.Format("found {0} CAB files", files.Count()));
+                var files = Directory.EnumerateFiles(openFolderDialog.Folder, "CAB-*", SearchOption.AllDirectories);
+                Logger.Info(string.Format("found {0} CAB files", files.Count()));
                 await Task.Run(() => assetsManager.BuildCABMap(files));
             }
         }
 
+        private async void toolStripComboBox1_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if (specifyAIVersion.SelectedIndex == 0) return;
+            optionsToolStripMenuItem.DropDown.Visible = false;
+            string version = specifyAIVersion.SelectedItem.ToString();
+
+            Logger.Info($"Loading AI v{version}");
+            specifyAIVersion.Enabled = false;
+            var path = versionManager.GetAIPath(version);
+            if (string.IsNullOrEmpty(path))
+            {
+                Logger.Warning("Invalid version, Aborting...");
+                specifyAIVersion.SelectedIndex = 0;
+                SpecifyAIVersionUpdate(true);
+                return;
+            }
+            if (versionManager.NeedDownload(version))
+            {
+                Logger.Info($"AI v{version} not found !");
+                var json = await versionManager.DownloadAI(version);
+                
+                File.WriteAllText(path, json);
+            }
+            var loaded = await assetsManager.LoadAIJSON(path, true);
+            if (loaded)
+                Logger.Info("AssetIndex loaded successfully !!");
+            SpecifyAIVersionUpdate(true);
+        }
+
+        private void SpecifyAIVersionUpdate(bool value)
+        {
+            if (InvokeRequired)
+            {
+                BeginInvoke(new Action(() => { specifyAIVersion.Enabled = true; }));
+            }
+            else
+            {
+                specifyAIVersion.Enabled = true;
+            }
+        }
 
         private void glControl1_MouseWheel(object sender, MouseEventArgs e)
         {

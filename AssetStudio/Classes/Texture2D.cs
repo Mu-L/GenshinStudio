@@ -8,6 +8,7 @@ namespace AssetStudio
         public long offset; //ulong
         public uint size;
         public string path;
+        public string asb;
 
         public StreamingInfo(ObjectReader reader)
         {
@@ -23,6 +24,7 @@ namespace AssetStudio
             }
             size = reader.ReadUInt32();
             path = reader.ReadAlignedString();
+            //asb = reader.ReadAlignedString();
         }
     }
 
@@ -134,14 +136,9 @@ namespace AssetStudio
 
             ResourceReader resourceReader;
             if (!string.IsNullOrEmpty(m_StreamData?.path))
-            {
-                m_StreamData.path = Path.GetFileNameWithoutExtension(m_StreamData.path);
-                resourceReader = new ResourceReader(m_StreamData.path, assetsFile, assetsFile.header.m_FileSize, m_StreamData.size);
-            }
+                resourceReader = new ResourceReader(m_StreamData.path, assetsFile, m_StreamData.offset, m_StreamData.size);
             else
-            {
                 resourceReader = new ResourceReader(reader, reader.BaseStream.Position, image_data_size);
-            }
             image_data = resourceReader;
         }
     }

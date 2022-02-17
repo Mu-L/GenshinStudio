@@ -56,13 +56,26 @@ namespace AssetStudio
                     assetsFile.assetsManager.resourceFileReaders.Add(resourceFileName, reader);
                     return reader;
                 }
-                if (resourceFileName.Contains("cab")) resourceFileName.Replace("cab", "CAB");
-                if (assetsFile.assetsManager.CABMap.TryGetValue(resourceFileName, out resourceFilePath))
+                if (assetsFile.originalPath.EndsWith(".blk"))
                 {
-                    needSearch = false;
-                    reader = new BinaryReader(File.OpenRead(resourceFilePath));
-                    assetsFile.assetsManager.resourceFileReaders.Add(resourceFileName, reader);
-                    return reader;
+                    if (assetsFile.assetsManager.BLKMap.TryGetValue(resourceFileName, out var blockInfo))
+                    {
+                        resourceFilePath = blockInfo.Path;
+                        needSearch = false;
+                        reader = new BinaryReader(File.OpenRead(resourceFilePath));
+                        assetsFile.assetsManager.resourceFileReaders.Add(resourceFileName, reader);
+                        return reader;
+                    }
+                }
+                else
+                {
+                    if (assetsFile.assetsManager.CABMap.TryGetValue(resourceFileName, out resourceFilePath))
+                    {
+                        needSearch = false;
+                        reader = new BinaryReader(File.OpenRead(resourceFilePath));
+                        assetsFile.assetsManager.resourceFileReaders.Add(resourceFileName, reader);
+                        return reader;
+                    }
                 }
                 throw new FileNotFoundException($"Can't find the resource file {resourceFileName}");
             }

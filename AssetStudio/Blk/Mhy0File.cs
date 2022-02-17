@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -9,10 +8,33 @@ namespace AssetStudio
 {
     public partial class Mhy0File
     {
-        private byte[] _data = null;
-        private Guid _id = Guid.Empty;
-        public byte[] Data => _data;
-        public Guid ID => _id;
+        public class Header
+        {
+            public int headerSize;
+            public byte[] headerData;
+            public int bundleCount;
+            public int blockCount;
+        }
+
+        public class StorageBlock
+        {
+            public int compressedSize;
+            public int uncompressedSize;
+        }
+
+        public class Node
+        {
+            public long offset;
+            public long size;
+            public string path;
+        }
+
+        public Header m_Header;
+        public long OriginalPos;
+        private StorageBlock[] m_BlocksInfo;
+        private Node[] m_DirectoryInfo;
+
+        public StreamFile[] fileList;
         private void Scramble2(byte[] input, int offset)
         {
             byte[] indexScramble = new byte[] {
@@ -68,7 +90,6 @@ namespace AssetStudio
                 v8 += a4;
             }
         }
-
         private int ReadScrambledInt1(byte[] a, int offset)
         {
             return a[offset + 1] | (a[offset + 6] << 8) | (a[offset + 3] << 16) | (a[offset + 2] << 24);
@@ -79,6 +100,8 @@ namespace AssetStudio
             return a[offset + 2] | (a[offset + 4] << 8) | (a[offset + 0] << 16) | (a[offset + 5] << 24);
         }
 
+        private int CalcOffset(int value) => value * 0x113 + 6;
+
         private byte[] DecompressHeader(byte[] data)
         {
             var decompressedSize = ReadScrambledInt1(data, 0x20);
@@ -87,69 +110,119 @@ namespace AssetStudio
 
             var numWrite = LZ4Codec.Decode(data, 0x27, data.Length - 0x27, decompressed, 0, decompressedSize);
             if (numWrite != decompressedSize)
-                throw new IOException($"Lz4 decompression error, write {numWrite} bytes but expected {decompressedSize} bytes");
-            //var lz4 = new Lz4DecoderStream(new MemoryStream(data, 0x27, data.Length - 0x27));
-            //lz4.Read(decompressed, 0, decompressedSize);
+                throw new IOException($"{string.Format("0x{0:x8}", OriginalPos)} doesn't point to a valid mhy0, Lz4 decompression error, write {numWrite} bytes but expected {decompressedSize} bytes");
 
             return decompressed;
         }
 
-        public Mhy0File(EndianBinaryReader reader)
+        private void ReadHeader(EndianBinaryReader reader)
         {
-            var originalPos = reader.Position;
+            OriginalPos = reader.Position;
             var magic = reader.ReadUInt32();
             if (magic != 0x3079686D)
                 throw new Exception("not a mhy0");
-            var headerSize = reader.ReadInt32();
-            var headerData = reader.ReadBytes(headerSize);
 
-            Scramble(headerData, 0, 0x39, 0x1C);
-            //File.WriteAllBytes("decrypted.bin", data);
+            m_Header = new Header();
+            m_Header.headerSize = reader.ReadInt32();
+            m_Header.headerData = reader.ReadBytes(m_Header.headerSize);
 
-            var decompressed = DecompressHeader(headerData);
-            //File.WriteAllBytes("decompressed.bin", decompressed);
+            Scramble(m_Header.headerData, 0, 0x39, 0x1C);
+            m_Header.headerData = DecompressHeader(m_Header.headerData);
+        }
+        private void ReadBlocksInfoAndDirectory(EndianBinaryReader reader)
+        {
+            m_Header.bundleCount = ReadScrambledInt2(m_Header.headerData, 0);
+            m_Header.blockCount = ReadScrambledInt2(m_Header.headerData, CalcOffset(m_Header.bundleCount));
 
-            var cabCount = ReadScrambledInt2(decompressed, 0);
-            var entryCount = ReadScrambledInt2(decompressed, cabCount * 0x113 + 6);
-
-            var name = Encoding.UTF8.GetString(decompressed.Skip(6).TakeWhile(b => !b.Equals(0)).ToArray());
-            if (name.StartsWith("CAB-"))
+            m_BlocksInfo = new StorageBlock[m_Header.blockCount];
+            for (int i = 0; i < m_Header.blockCount; i++)
             {
-                //var id1 = Convert.ToUInt64(name.Substring(4, 16), 16);
-                //var id2 = Convert.ToUInt64(name.Substring(20, 16), 16);
-                //_id = id1 ^ id2;
-                //Console.WriteLine(name.Substring(4));
-                _id = new Guid(name.Substring(4));
-                //Console.WriteLine(_id);
+                var offset = i * 13 + CalcOffset(m_Header.bundleCount);
+                m_BlocksInfo[i] = new StorageBlock
+                {
+                    uncompressedSize = ReadScrambledInt1(m_Header.headerData, offset + 0xC),
+                    compressedSize = ReadScrambledInt2(m_Header.headerData, offset + 6)
+                };
             }
 
-            var compressedEntrySizes = new List<int>(entryCount);
-            var decompressedEntrySizes = new List<int>(entryCount);
-            for (int i = 0; i < entryCount; i++)
+            m_DirectoryInfo = new Node[m_Header.bundleCount];
+            for (int i = 0; i < m_Header.bundleCount; i++)
             {
-                var offset = i * 13 + cabCount * 0x113 + 6;
-                compressedEntrySizes.Add(ReadScrambledInt2(decompressed, offset + 6));
-                decompressedEntrySizes.Add(ReadScrambledInt1(decompressed, offset + 0xC));
+                var offset = CalcOffset(i);
+                m_DirectoryInfo[i] = new Node
+                {
+                    offset = ReadScrambledInt2(m_Header.headerData, offset + 0x100 + 6),
+                    size = ReadScrambledInt1(m_Header.headerData, offset + 0x100 + 0xC),
+                    path = Encoding.UTF8.GetString(m_Header.headerData.Skip(offset).TakeWhile(b => !b.Equals(0)).ToArray()),
+                };
             }
+        }
 
-            reader.Position = originalPos + headerSize + 8;
-            var finalData = new byte[decompressedEntrySizes.Sum()];
-            var finalDataPos = 0;
-            for (int i = 0; i < entryCount; i++)
+        private Stream CreateBlocksStream(string path)
+        {
+            Stream blocksStream;
+            var uncompressedSizeSum = m_BlocksInfo.Sum(x => x.uncompressedSize);
+            if (uncompressedSizeSum >= int.MaxValue)
+                blocksStream = new FileStream(path + ".temp", FileMode.Create, FileAccess.ReadWrite, FileShare.None, 4096, FileOptions.DeleteOnClose);
+            else
+                blocksStream = new MemoryStream(uncompressedSizeSum);
+            return blocksStream;
+        }
+
+        private void ReadBlocks(EndianBinaryReader reader, Stream blocksStream)
+        {
+            reader.Position = OriginalPos + m_Header.headerSize + 8;
+            foreach (var blockInfo in m_BlocksInfo)
             {
-                var compressedEntry = reader.ReadBytes(compressedEntrySizes[i]);
-                if (compressedEntry.Length >= 0x21)
-                    Scramble(compressedEntry, 0, 0x21, 8);
-
-                var numWrite = LZ4Codec.Decode(compressedEntry, 0xC, compressedEntry.Length - 0xC, finalData, finalDataPos, decompressedEntrySizes[i]);
-                if (numWrite != decompressedEntrySizes[i])
-                    throw new IOException($"Lz4 decompression error, write {numWrite} bytes but expected {decompressedEntrySizes[i]} bytes");
-                //var lz4 = new Lz4DecoderStream(new MemoryStream(compressedEntry, 0xC, compressedEntry.Length - 0xC));
-                //lz4.Read(finalData, finalDataPos, decompressedEntrySizes[i]);
-                finalDataPos += decompressedEntrySizes[i];
+                var compressedSize = blockInfo.compressedSize;
+                var compressedBytes = BigArrayPool<byte>.Shared.Rent(compressedSize);
+                reader.Read(compressedBytes, 0, compressedSize);
+                if (compressedSize >= 0x21)
+                    Scramble(compressedBytes, 0, 0x21, 8);
+                var uncompressedSize = blockInfo.uncompressedSize;
+                var uncompressedBytes = BigArrayPool<byte>.Shared.Rent(uncompressedSize);
+                var numWrite = LZ4Codec.Decode(compressedBytes, 0xC, compressedSize - 0xC, uncompressedBytes, 0, uncompressedSize);
+                if (numWrite != uncompressedSize)
+                    throw new IOException($"{string.Format("0x{0:x8}", OriginalPos)} doesn't point to a valid mhy0, Lz4 decompression error, write {numWrite} bytes but expected {uncompressedSize} bytes");
+                blocksStream.Write(uncompressedBytes, 0, uncompressedSize);
+                BigArrayPool<byte>.Shared.Return(compressedBytes);
+                BigArrayPool<byte>.Shared.Return(uncompressedBytes);
             }
+        }
 
-            _data = finalData;
+        private void ReadFiles(Stream blocksStream, string path)
+        {
+            fileList = new StreamFile[m_DirectoryInfo.Length];
+            for (int i = 0; i < m_DirectoryInfo.Length; i++)
+            {
+                var node = m_DirectoryInfo[i];
+                var file = new StreamFile();
+                fileList[i] = file;
+                file.path = node.path;
+                file.fileName = Path.GetFileName(node.path);
+                if (node.size >= int.MaxValue)
+                {
+                    var extractPath = path + "_unpacked" + Path.DirectorySeparatorChar;
+                    Directory.CreateDirectory(extractPath);
+                    file.stream = new FileStream(extractPath + file.fileName, FileMode.Create, FileAccess.ReadWrite, FileShare.ReadWrite);
+                }
+                else
+                    file.stream = new MemoryStream((int)node.size);
+                blocksStream.Position = node.offset;
+                blocksStream.CopyTo(file.stream, node.size);
+                file.stream.Position = 0;
+            }
+        }
+
+        public Mhy0File(EndianBinaryReader reader, string path)
+        {
+            ReadHeader(reader);
+            ReadBlocksInfoAndDirectory(reader);
+            using (var blocksStream = CreateBlocksStream(path))
+            {
+                ReadBlocks(reader, blocksStream);
+                ReadFiles(blocksStream, path);
+            }
         }
     }
 }

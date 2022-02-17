@@ -69,6 +69,19 @@ namespace AssetStudio
         }
     }
 
+    public class ACLClip
+    {
+        public byte[] m_ClipData;
+
+        public uint m_CurveCount;
+        public ACLClip(ObjectReader reader)
+        {
+            m_ClipData = reader.ReadUInt8Array();
+            reader.AlignStream();
+            m_CurveCount = reader.ReadUInt32();
+        }
+    }
+
     public class PackedFloatVector
     {
         public uint m_NumItems;
@@ -621,6 +634,7 @@ namespace AssetStudio
         public StreamedClip m_StreamedClip;
         public DenseClip m_DenseClip;
         public ConstantClip m_ConstantClip;
+        public ACLClip m_ACLClip;
         public ValueArrayConstant m_Binding;
 
         public Clip(ObjectReader reader)
@@ -632,11 +646,10 @@ namespace AssetStudio
             {
                 m_ConstantClip = new ConstantClip(reader);
             }
+            m_ACLClip = new ACLClip(reader);
             if (version[0] < 2018 || (version[0] == 2018 && version[1] < 3)) //2018.3 down
             {
-                //m_Binding = new ValueArrayConstant(reader);
-                reader.ReadBytes(reader.ReadInt32());
-                reader.AlignStream();
+                m_Binding = new ValueArrayConstant(reader);
             }
         }
 
@@ -747,8 +760,6 @@ namespace AssetStudio
             }
             m_AverageSpeed = version[0] > 5 || (version[0] == 5 && version[1] >= 4) ? reader.ReadVector3() : (Vector3)reader.ReadVector4();//5.4 and up
             m_Clip = new Clip(reader);
-            reader.ReadInt32();
-            reader.ReadInt32();
             m_StartTime = reader.ReadSingle();
             m_StopTime = reader.ReadSingle();
             m_OrientationOffsetY = reader.ReadSingle();

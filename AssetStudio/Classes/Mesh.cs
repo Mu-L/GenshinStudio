@@ -543,7 +543,8 @@ namespace AssetStudio
                     var m_KeepIndices = reader.ReadBoolean();
                 }
                 reader.AlignStream();
-                reader.ReadInt32(); //unknown
+                var m_PackSkinDataToUV2UV3 = reader.ReadBoolean();
+                reader.AlignStream();
 
                 //Unity fixed it in 2017.3.1p1 and later versions
                 if ((version[0] > 2017 || (version[0] == 2017 && version[1] >= 4)) || //2017.4
@@ -634,7 +635,7 @@ namespace AssetStudio
                 m_CompressedMesh = new CompressedMesh(reader);
             }
 
-            reader.Position += 24; //AABB m_LocalAABB
+            var m_LocalAABB = new AABB(reader);
 
             if (version[0] < 3 || (version[0] == 3 && version[1] <= 4)) //3.4.2 and earlier
             {

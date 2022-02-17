@@ -1,7 +1,10 @@
 ﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 
 namespace AssetStudio
 {
@@ -26,36 +29,88 @@ namespace AssetStudio
             BlockInfoMap = new Dictionary<int, Block>();
             BlockMap = new Dictionary<int, byte>();
         }
-        public bool FromFile(string path)
+        public async Task<bool> FromFile(string path, bool isEgorFormat = false)
         {
-            var file = File.OpenText(path);
-            JsonSerializer serializer = new JsonSerializer();
-            ResourceIndex obj = serializer.Deserialize(file, typeof(ResourceIndex)) as ResourceIndex;
-            if (obj != null)
+            Clear();
+
+            var stream = File.OpenRead(path);
+            var bytes = new byte[stream.Length];
+            var count = await stream.ReadAsync(bytes, 0, (int)stream.Length);
+
+            if (count != stream.Length) throw new Exception("Error While Reading File");
+            var json = Encoding.UTF8.GetString(bytes);
+
+            if (isEgorFormat)
             {
-                BundleDependencyMap = obj.BundleDependencyMap;
-                BlockInfoMap = obj.BlockInfoMap;
-                BlockMap = obj.BlockMap;
-                AssetMap = obj.AssetMap;
-                AssetLocationMap = obj.AssetLocationMap;
-                BlockSortList = obj.BlockSortList;
-                return true;
+                var obj = JsonConvert.DeserializeObject<AssetIndex>(json);
+                if (obj != null)
+                {
+                    return MapToResourceIndex(obj);
+                }
+            }
+            else
+            {
+                var obj = JsonConvert.DeserializeObject<ResourceIndex>(json);
+                if (obj != null)
+                {
+                    BundleDependencyMap = obj.BundleDependencyMap;
+                    BlockInfoMap = obj.BlockInfoMap;
+                    BlockMap = obj.BlockMap;
+                    AssetMap = obj.AssetMap;
+                    AssetLocationMap = obj.AssetLocationMap;
+                    BlockSortList = obj.BlockSortList;
+                    return true;
+                }
             }
             return false;
         }
         public void Clear()
         {
             BundleDependencyMap.Clear();
-            BlockInfoMap.ToList().Clear();
-            AssetLocationMap.ToList().ForEach(x => x.Clear());
+            BlockInfoMap.Clear();
             BlockMap.Clear();
+            AssetMap.Clear();
+            AssetLocationMap.ForEach(x => x.Clear());
+            BlockSortList.Clear();
+        }
+        public bool MapToResourceIndex(AssetIndex asset_index)
+        {
+            try
+            {
+                BundleDependencyMap = asset_index.Dependencies;
+                BlockSortList = asset_index.SortList.ConvertAll(x => (int)x);
+                foreach (var asset in asset_index.SubAssets)
+                {
+                    foreach (var subAsset in asset.Value)
+                    {
+                        var bundleInfo = new BundleInfo(asset.Key, subAsset.Name);
+                        var key = (int)subAsset.PathHashLast;
+                        AssetLocationMap[subAsset.PathHashPre].Add(key, bundleInfo);
+                        AssetMap[key] = ((ulong)subAsset.PathHashLast) << 8 | subAsset.PathHashPre;
+                    }
+                }
+                foreach (var asset in asset_index.Assets)
+                {
+                    var block = new Block((int)asset.Value.Id, (int)asset.Value.Offset);
+                    BlockInfoMap.Add(asset.Key, block);
+
+                    if (!BlockMap.ContainsKey((int)asset.Value.Id))
+                        BlockMap.Add((int)asset.Value.Id, asset.Value.Language);
+                }
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+
+            return true;
         }
         public List<BundleInfo> GetAllAssets()
         {
             var hashes = new List<BundleInfo>();
             for (int i = 0; i < AssetLocationMap.Capacity; i++)
             {
-                foreach(var pair in AssetLocationMap[i])
+                foreach (var pair in AssetLocationMap[i])
                 {
                     hashes.Add(pair.Value);
                 }
@@ -86,7 +141,7 @@ namespace AssetStudio
         }
         public string GetBundlePath(int last)
         {
-            foreach(var location in AssetLocationMap)
+            foreach (var location in AssetLocationMap)
             {
                 if (location.TryGetValue(last, out var bundleInfo)) return bundleInfo.Path;
             }
@@ -189,13 +244,32 @@ namespace AssetStudio
             Id = id;
             Offset = offset;
         }
-        public override bool Equals(object obj)
+    }
+    public class BlockInfo : IComparable<BlockInfo>
+    {
+        public string Path;
+        public long Offset;
+
+        public BlockInfo() : this("", 0) { }
+        public BlockInfo(string path, long offset)
         {
-            return obj is Block block && Id == block.Id && Offset == block.Offset;
+            Path = path;
+            Offset = offset;
         }
-        public override int GetHashCode()
+        public int CompareTo(BlockInfo other)
         {
-            return Id.GetHashCode() + Offset.GetHashCode();
+            if (other == null) return 1;
+
+            int result;
+            if (other == null)
+                throw new ArgumentException("Object is not a BlockInfo");
+
+            result = Path.CompareTo(other.Path);
+
+            if (result == 0)
+                result = Offset.CompareTo(other.Offset);
+
+            return result;
         }
     }
     public class BlockFile
@@ -207,5 +281,28 @@ namespace AssetStudio
             LanguageCode = languageCode;
             Id = id;
         }
+    }
+
+    public class AssetIndex
+    {
+        public Dictionary<string, string> Types { get; set; }
+        public class SubAssetInfo
+        {
+            public string Name { get; set; }
+            public byte PathHashPre { get; set; }
+            public uint PathHashLast { get; set; }
+        }
+        public Dictionary<int, List<SubAssetInfo>> SubAssets { get; set; }
+        public Dictionary<int, List<int>> Dependencies { get; set; }
+        public List<uint> PreloadBlocks { get; set; }
+        public List<uint> PreloadShaderBlocks { get; set; }
+        public class BlockInfo
+        {
+            public byte Language { get; set; }
+            public uint Id { get; set; }
+            public uint Offset { get; set; }
+        }
+        public Dictionary<int, BlockInfo> Assets { get; set; }
+        public List<uint> SortList { get; set; }
     }
 }
