@@ -70,8 +70,7 @@ namespace AssetStudio
             }
             catch (Exception e)
             {
-                Logger.Error("BLKMap was not build");
-                Console.WriteLine(e.ToString());
+                Logger.Warning($"BLKMap was not build, {e.Message}");
             }
         }
         public void LoadBlkMap()
@@ -97,8 +96,7 @@ namespace AssetStudio
             }
             catch (Exception e)
             {
-                Logger.Error("BLKMap was not loaded");
-                Console.WriteLine(e.ToString());
+                Logger.Warning($"BLKMap was not loaded, {e.Message}");
             }
         }
         public void BuildCABMap(IEnumerable<string> files)
@@ -136,8 +134,7 @@ namespace AssetStudio
             }
             catch (Exception e)
             {
-                Logger.Error("CABMap was not build");
-                Console.WriteLine(e.ToString());
+                Logger.Warning($"CABMap was not build, {e.Message}");
             }
         }
         public void LoadCABMap()
@@ -162,8 +159,7 @@ namespace AssetStudio
             }
             catch (Exception e)
             {
-                Logger.Error("CABMap was not loaded");
-                Console.WriteLine(e.ToString());
+                Logger.Warning($"CABMap was not loaded, {e.Message}");
             }
         }
         public async Task<bool> LoadAIJSON(string file, bool isEgorFromat = false)
