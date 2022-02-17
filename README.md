@@ -36,6 +36,6 @@ Extract it using `File -> Extract File` in [GenshinStudio](https://github.com/Ra
 Looking forward for feedback for issues/bugs to fix and update.
 _____________________________________________________________________________________________________________________________
 Special Thank to:
-Khang06: [genshinblkstuff](https://github.com/khang06/genshinblkstuff) for blk/mhy0 extraction.
-Radioegor146: [gi-asset-indexes](https://github.com/radioegor146/gi-asset-indexes) for recovered/updated asset_index's.
-Ds5678: [AssetRipper](https://github.com/AssetRipper/AssetRipper)/[discord](https://discord.gg/XqXa53W2Yh) for information about Asset Formats & Parsing.
+- Khang06: [genshinblkstuff](https://github.com/khang06/genshinblkstuff) for blk/mhy0 extraction.
+- Radioegor146: [gi-asset-indexes](https://github.com/radioegor146/gi-asset-indexes) for recovered/updated asset_index's.
+- Ds5678: [AssetRipper](https://github.com/AssetRipper/AssetRipper)/[discord](https://discord.gg/XqXa53W2Yh) for information about Asset Formats & Parsing.
