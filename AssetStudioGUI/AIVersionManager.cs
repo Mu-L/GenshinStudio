@@ -234,7 +234,7 @@ namespace AssetStudioGUI
 
         public string[] GetVersions()
         {
-            if (!Online) return new string[1] { "item" };
+            if (!Online) return new string[0];
             return Versions.Select(x => x.Version).ToArray();
         }
     }
