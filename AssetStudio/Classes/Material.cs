@@ -64,6 +64,7 @@ namespace AssetStudio
     {
         public PPtr<Shader> m_Shader;
         public UnityPropertySheet m_SavedProperties;
+        public KeyValuePair<string, string>[] m_StringTagMap;
 
         public Material(ObjectReader reader) : base(reader)
         {
@@ -83,7 +84,7 @@ namespace AssetStudio
             if (version[0] > 5 || (version[0] == 5 && version[1] >= 6)) //5.6 and up
             {
                 var m_EnableInstancingVariants = reader.ReadBoolean();
-                //var m_DoubleSidedGI = a_Stream.ReadBoolean(); //2017 and up
+                var m_DoubleSidedGI = reader.ReadBoolean(); //2017 and up
                 reader.AlignStream();
             }
 
@@ -95,10 +96,12 @@ namespace AssetStudio
             if (version[0] > 5 || (version[0] == 5 && version[1] >= 1)) //5.1 and up
             {
                 var stringTagMapSize = reader.ReadInt32();
+                m_StringTagMap = new KeyValuePair<string, string>[stringTagMapSize];
                 for (int i = 0; i < stringTagMapSize; i++)
                 {
                     var first = reader.ReadAlignedString();
                     var second = reader.ReadAlignedString();
+                    m_StringTagMap[i] = new KeyValuePair<string, string>(first, second);
                 }
             }
 

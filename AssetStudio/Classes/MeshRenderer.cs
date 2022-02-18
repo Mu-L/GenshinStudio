@@ -9,7 +9,7 @@ namespace AssetStudio
     {
         public MeshRenderer(ObjectReader reader) : base(reader)
         {
-
+            var m_AdditionalVertexStreams = new PPtr<Mesh>(reader);
         }
     }
 }

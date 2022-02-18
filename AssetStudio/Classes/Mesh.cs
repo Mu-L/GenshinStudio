@@ -659,6 +659,7 @@ namespace AssetStudio
                 reader.AlignStream();
                 var m_BakedTriangleCollisionMesh = reader.ReadUInt8Array();
                 reader.AlignStream();
+                var m_MeshOptimized = reader.ReadBoolean();
             }
 
             if (version[0] > 2018 || (version[0] == 2018 && version[1] >= 2)) //2018.2 and up
