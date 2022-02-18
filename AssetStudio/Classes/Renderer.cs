@@ -46,6 +46,7 @@ namespace AssetStudio
                         var m_EnableShadowCulling = reader.ReadByte();
                         var m_EnableGpuQuery = reader.ReadByte();
                         var m_AllowHalfResolution = reader.ReadByte();
+                        if (m_AllowHalfResolution == 0x01) reader.ReadInt32();
                         var m_IsRainOccluder = reader.ReadBoolean();
                         var m_IsDynamicAOOccluder = reader.ReadBoolean();
                         var m_IsHQDynamicAOOccluder = reader.ReadBoolean();
