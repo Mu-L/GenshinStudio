@@ -162,12 +162,12 @@ namespace AssetStudio
                 Logger.Warning($"CABMap was not loaded, {e.Message}");
             }
         }
-        public async Task<bool> LoadAIJSON(string file, bool isEgorFromat = false)
+        public async Task<bool> LoadAIJSON(string file)
         {
             Logger.Info(string.Format("Loading AssetIndex JSON"));
             try
             {
-                return await resourceIndex.FromFile(file, isEgorFromat);
+                return await resourceIndex.FromFile(file);
             }
             catch (Exception e)
             {
@@ -668,6 +668,7 @@ namespace AssetStudio
                                 obj = new MeshFilter(objectReader);
                                 break;
                             case ClassIDType.MeshRenderer:
+                                if (!Renderer.Parsable) continue;
                                 obj = new MeshRenderer(objectReader);
                                 break;
                             case ClassIDType.MiHoYoBinData:
@@ -692,6 +693,7 @@ namespace AssetStudio
                                 obj = new Shader(objectReader);
                                 break;
                             case ClassIDType.SkinnedMeshRenderer:
+                                if (!Renderer.Parsable) continue;
                                 obj = new SkinnedMeshRenderer(objectReader);
                                 break;
                             case ClassIDType.Sprite:

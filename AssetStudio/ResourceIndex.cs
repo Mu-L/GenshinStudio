@@ -13,13 +13,13 @@ namespace AssetStudio
         public Dictionary<int, List<int>> BundleDependencyMap;
         public Dictionary<int, Block> BlockInfoMap;
         public Dictionary<int, byte> BlockMap;
-        public Dictionary<int, ulong> AssetMap;
+        public Dictionary<ulong, ulong> AssetMap;
         public List<Dictionary<int, BundleInfo>> AssetLocationMap;
         public List<int> BlockSortList;
         public ResourceIndex()
         {
             BlockSortList = new List<int>();
-            AssetMap = new Dictionary<int, ulong>();
+            AssetMap = new Dictionary<ulong, ulong>();
             AssetLocationMap = new List<Dictionary<int, BundleInfo>>(0x100);
             for (int i = 0; i < AssetLocationMap.Capacity; i++)
             {
@@ -29,7 +29,7 @@ namespace AssetStudio
             BlockInfoMap = new Dictionary<int, Block>();
             BlockMap = new Dictionary<int, byte>();
         }
-        public async Task<bool> FromFile(string path, bool isEgorFormat = false)
+        public async Task<bool> FromFile(string path)
         {
             Clear();
 
@@ -40,27 +40,10 @@ namespace AssetStudio
             if (count != stream.Length) throw new Exception("Error While Reading File");
             var json = Encoding.UTF8.GetString(bytes);
 
-            if (isEgorFormat)
+            var obj = JsonConvert.DeserializeObject<AssetIndex>(json);
+            if (obj != null)
             {
-                var obj = JsonConvert.DeserializeObject<AssetIndex>(json);
-                if (obj != null)
-                {
-                    return MapToResourceIndex(obj);
-                }
-            }
-            else
-            {
-                var obj = JsonConvert.DeserializeObject<ResourceIndex>(json);
-                if (obj != null)
-                {
-                    BundleDependencyMap = obj.BundleDependencyMap;
-                    BlockInfoMap = obj.BlockInfoMap;
-                    BlockMap = obj.BlockMap;
-                    AssetMap = obj.AssetMap;
-                    AssetLocationMap = obj.AssetLocationMap;
-                    BlockSortList = obj.BlockSortList;
-                    return true;
-                }
+                return MapToResourceIndex(obj);
             }
             return false;
         }
@@ -84,8 +67,9 @@ namespace AssetStudio
                     foreach (var subAsset in asset.Value)
                     {
                         var bundleInfo = new BundleInfo(asset.Key, subAsset.Name);
-                        var key = (int)subAsset.PathHashLast;
-                        AssetLocationMap[subAsset.PathHashPre].Add(key, bundleInfo);
+                        var blockInfo = asset_index.Assets[asset.Key];
+                        ulong key = (((ulong)blockInfo.Id) << 32) | subAsset.PathHashLast;
+                        AssetLocationMap[subAsset.PathHashPre].Add((int)subAsset.PathHashLast, bundleInfo);
                         AssetMap[key] = ((ulong)subAsset.PathHashLast) << 8 | subAsset.PathHashPre;
                     }
                 }
@@ -147,9 +131,9 @@ namespace AssetStudio
             }
             return null;
         }
-        public ulong GetAssetIndex(int container)
+        public ulong GetAssetIndex(ulong blkHash)
         {
-            if (AssetMap.TryGetValue(container, out var value)) return value;
+            if (AssetMap.TryGetValue(blkHash, out var value)) return value;
             else return 0;
         }
         public List<int> GetAllAssetIndices(int bundle)
@@ -208,11 +192,12 @@ namespace AssetStudio
             var asset = new Asset(hash);
             return AssetLocationMap[asset.Pre].ContainsKey(asset.Last);
         }
-        public void AddAssetLocation(BundleInfo bundle, Asset asset)
-        {
-            AssetMap[asset.Last] = asset.Hash;
-            AssetLocationMap[asset.Pre].Add(asset.Last, bundle);
-        }
+
+        //public void AddAssetLocation(BundleInfo bundle, Asset asset)
+        //{
+        //    AssetMap[asset.Last] = asset.Hash;
+        //    AssetLocationMap[asset.Pre].Add(asset.Last, bundle);
+        //}
     }
     public class BundleInfo
     {

@@ -80,7 +80,6 @@
             this.exportClassStructuresMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.console = new System.Windows.Forms.ToolStripMenuItem();
             this.miscToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.selectAIJSONToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.buildBLKMapToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.buildCABMapToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
@@ -566,31 +565,23 @@
             // miscToolStripMenuItem
             // 
             this.miscToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.selectAIJSONToolStripMenuItem,
             this.buildBLKMapToolStripMenuItem,
             this.buildCABMapToolStripMenuItem});
             this.miscToolStripMenuItem.Name = "miscToolStripMenuItem";
             this.miscToolStripMenuItem.Size = new System.Drawing.Size(47, 20);
             this.miscToolStripMenuItem.Text = "Misc.";
             // 
-            // selectAIJSONToolStripMenuItem
-            // 
-            this.selectAIJSONToolStripMenuItem.Name = "selectAIJSONToolStripMenuItem";
-            this.selectAIJSONToolStripMenuItem.Size = new System.Drawing.Size(151, 22);
-            this.selectAIJSONToolStripMenuItem.Text = "Select AI JSON";
-            this.selectAIJSONToolStripMenuItem.Click += new System.EventHandler(this.selectAIJSONToolStripMenuItem_Click);
-            // 
             // buildBLKMapToolStripMenuItem
             // 
             this.buildBLKMapToolStripMenuItem.Name = "buildBLKMapToolStripMenuItem";
-            this.buildBLKMapToolStripMenuItem.Size = new System.Drawing.Size(151, 22);
+            this.buildBLKMapToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
             this.buildBLKMapToolStripMenuItem.Text = "Build BLKMap";
             this.buildBLKMapToolStripMenuItem.Click += new System.EventHandler(this.buildBLKMapToolStripMenuItem_Click);
             // 
             // buildCABMapToolStripMenuItem
             // 
             this.buildCABMapToolStripMenuItem.Name = "buildCABMapToolStripMenuItem";
-            this.buildCABMapToolStripMenuItem.Size = new System.Drawing.Size(151, 22);
+            this.buildCABMapToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
             this.buildCABMapToolStripMenuItem.Text = "Build CABMap";
             this.buildCABMapToolStripMenuItem.Click += new System.EventHandler(this.buildCABMapToolStripMenuItem_Click);
             // 
@@ -1280,7 +1271,6 @@
         private System.Windows.Forms.ToolStripTextBox specifyUnityVersion;
         private System.Windows.Forms.ToolStripMenuItem toolStripMenuItem15;
         private System.Windows.Forms.ToolStripMenuItem miscToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem selectAIJSONToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem buildBLKMapToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem console;
         private System.Windows.Forms.ToolStripMenuItem buildCABMapToolStripMenuItem;

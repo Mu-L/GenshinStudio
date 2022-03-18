@@ -177,8 +177,9 @@ namespace AssetStudio
                 var compressedSize = blockInfo.compressedSize;
                 var compressedBytes = BigArrayPool<byte>.Shared.Rent(compressedSize);
                 reader.Read(compressedBytes, 0, compressedSize);
-                if (compressedSize >= 0x21)
-                    Scramble(compressedBytes, 0, 0x21, 8);
+                if (compressedSize < 0x10)
+                    throw new Exception($"Wrong compressed length: {compressedSize}");
+                Scramble(compressedBytes, 0, (ulong)Math.Min(compressedBytes.Length, 0x21), 8);
                 var uncompressedSize = blockInfo.uncompressedSize;
                 var uncompressedBytes = BigArrayPool<byte>.Shared.Rent(uncompressedSize);
                 var numWrite = LZ4Codec.Decode(compressedBytes, 0xC, compressedSize - 0xC, uncompressedBytes, 0, uncompressedSize);

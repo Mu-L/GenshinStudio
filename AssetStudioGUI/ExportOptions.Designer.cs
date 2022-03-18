@@ -32,6 +32,7 @@
             this.OKbutton = new System.Windows.Forms.Button();
             this.Cancel = new System.Windows.Forms.Button();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
+            this.disableRndrr = new System.Windows.Forms.CheckBox();
             this.exportIndexObject = new System.Windows.Forms.CheckBox();
             this.exportAssetBundle = new System.Windows.Forms.CheckBox();
             this.openAfterExport = new System.Windows.Forms.CheckBox();
@@ -65,9 +66,9 @@
             this.eulerFilter = new System.Windows.Forms.CheckBox();
             this.exportUvsTooltip = new System.Windows.Forms.ToolTip(this.components);
             this.groupBox3 = new System.Windows.Forms.GroupBox();
+            this.enableXor = new System.Windows.Forms.CheckBox();
             this.key = new System.Windows.Forms.NumericUpDown();
             this.label7 = new System.Windows.Forms.Label();
-            this.enableXor = new System.Windows.Forms.CheckBox();
             this.groupBox1.SuspendLayout();
             this.panel1.SuspendLayout();
             this.groupBox2.SuspendLayout();
@@ -102,6 +103,7 @@
             // groupBox1
             // 
             this.groupBox1.AutoSize = true;
+            this.groupBox1.Controls.Add(this.disableRndrr);
             this.groupBox1.Controls.Add(this.exportIndexObject);
             this.groupBox1.Controls.Add(this.exportAssetBundle);
             this.groupBox1.Controls.Add(this.openAfterExport);
@@ -117,6 +119,16 @@
             this.groupBox1.TabIndex = 9;
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "Export";
+            // 
+            // disableRndrr
+            // 
+            this.disableRndrr.AutoSize = true;
+            this.disableRndrr.Location = new System.Drawing.Point(97, 196);
+            this.disableRndrr.Name = "disableRndrr";
+            this.disableRndrr.Size = new System.Drawing.Size(113, 17);
+            this.disableRndrr.TabIndex = 13;
+            this.disableRndrr.Text = "Disable Renderers";
+            this.disableRndrr.UseVisualStyleBackColor = true;
             // 
             // exportIndexObject
             // 
@@ -511,6 +523,18 @@
             this.groupBox3.TabStop = false;
             this.groupBox3.Text = "MiHoYoBinData";
             // 
+            // enableXor
+            // 
+            this.enableXor.AutoSize = true;
+            this.enableXor.Checked = true;
+            this.enableXor.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.enableXor.Location = new System.Drawing.Point(11, 22);
+            this.enableXor.Name = "enableXor";
+            this.enableXor.Size = new System.Drawing.Size(85, 17);
+            this.enableXor.TabIndex = 12;
+            this.enableXor.Text = "Enable XOR";
+            this.enableXor.UseVisualStyleBackColor = true;
+            // 
             // key
             // 
             this.key.Hexadecimal = true;
@@ -532,18 +556,6 @@
             this.label7.Size = new System.Drawing.Size(25, 13);
             this.label7.TabIndex = 7;
             this.label7.Text = "Key";
-            // 
-            // enableXor
-            // 
-            this.enableXor.AutoSize = true;
-            this.enableXor.Checked = true;
-            this.enableXor.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.enableXor.Location = new System.Drawing.Point(11, 22);
-            this.enableXor.Name = "enableXor";
-            this.enableXor.Size = new System.Drawing.Size(85, 17);
-            this.enableXor.TabIndex = 12;
-            this.enableXor.Text = "Enable XOR";
-            this.enableXor.UseVisualStyleBackColor = true;
             // 
             // ExportOptions
             // 
@@ -622,5 +634,6 @@
         private System.Windows.Forms.NumericUpDown key;
         private System.Windows.Forms.Label label7;
         private System.Windows.Forms.CheckBox enableXor;
+        private System.Windows.Forms.CheckBox disableRndrr;
     }
 }

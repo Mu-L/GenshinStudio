@@ -258,12 +258,16 @@ namespace AssetStudioGUI
                             {
                                 if (indexObject.Names.TryGetValue(m_MiHoYoBinData.m_PathID, out var binName))
                                 {
-                                    var last = int.Parse(binName, NumberStyles.HexNumber);
-                                    var path = assetsManager.resourceIndex.GetBundlePath(last);
-                                    if (!string.IsNullOrEmpty(path))
+                                    var blkName = Path.GetFileNameWithoutExtension(assetsFile.originalPath);
+                                    var blk = ulong.Parse(blkName, NumberStyles.Integer);
+                                    var last = ulong.Parse(binName, NumberStyles.HexNumber);
+                                    var blkHash = (blk << 32) | last;
+                                    var index = assetsManager.resourceIndex.GetAssetIndex(blkHash);
+                                    var bundleInfo = assetsManager.resourceIndex.GetBundleInfo(index);
+                                    if (bundleInfo != null)
                                     {
-                                        assetItem.Container = path;
-                                        assetItem.Text = Path.GetFileName(path);
+                                        assetItem.Container = bundleInfo.Path;
+                                        assetItem.Text = Path.GetFileName(bundleInfo.Path);
                                     }
                                     else
                                     {

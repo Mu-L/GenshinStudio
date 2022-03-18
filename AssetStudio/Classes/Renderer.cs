@@ -19,6 +19,7 @@ namespace AssetStudio
 
     public abstract class Renderer : Component
     {
+        public static bool Parsable;
         public PPtr<Material>[] m_Materials;
         public StaticBatchInfo m_StaticBatchInfo;
         public uint[] m_SubsetIndices;
@@ -46,12 +47,10 @@ namespace AssetStudio
                         var m_EnableShadowCulling = reader.ReadByte();
                         var m_EnableGpuQuery = reader.ReadByte();
                         var m_AllowHalfResolution = reader.ReadByte();
-                        if (m_AllowHalfResolution == 0x01) reader.ReadInt32();
                         var m_IsRainOccluder = reader.ReadBoolean();
                         var m_IsDynamicAOOccluder = reader.ReadBoolean();
                         var m_IsHQDynamicAOOccluder = reader.ReadBoolean();
                         var m_IsCloudObject = reader.ReadBoolean();
-                        if (m_IsCloudObject) reader.ReadInt32();
                         var m_IsInteriorVolume = reader.ReadBoolean();
                         var m_IsDynamic = reader.ReadBoolean();
                         var m_UseTessellation = reader.ReadByte();
@@ -73,7 +72,6 @@ namespace AssetStudio
                         var m_RayTraceProcedural = reader.ReadByte();
                     }
                     var m_MeshShowQuality = reader.ReadByte();
-                    if (m_MeshShowQuality == 0x01) reader.ReadInt32();
                     reader.AlignStream();
                 }
                 else

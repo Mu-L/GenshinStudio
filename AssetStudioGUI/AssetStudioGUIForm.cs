@@ -129,6 +129,7 @@ namespace AssetStudioGUI
             enablePreview.Checked = Properties.Settings.Default.enablePreview;
             AssetBundle.Exportable = Properties.Settings.Default.exportAssetBundle;
             IndexObject.Exportable = Properties.Settings.Default.exportIndexObject;
+            Renderer.Parsable = !Properties.Settings.Default.disableRndrr;
             MiHoYoBinData.doXOR = Properties.Settings.Default.enableXor;
             MiHoYoBinData.Key = Properties.Settings.Default.key;
             AllocConsole();
@@ -258,11 +259,11 @@ namespace AssetStudioGUI
 
             if (!string.IsNullOrEmpty(productName))
             {
-                Text = $"GenshinStudio v{Application.ProductVersion} - {productName} - {assetsManager.assetsFileList[0].unityVersion} - {assetsManager.assetsFileList[0].m_TargetPlatform}";
+                Text = $"GenshinStudio v{Application.ProductVersion} - {productName} - {Path.GetFileName(assetsManager.assetsFileList[0].originalPath)} - {assetsManager.assetsFileList[0].unityVersion} - {assetsManager.assetsFileList[0].m_TargetPlatform}";
             }
             else
             {
-                Text = $"GenshinStudio v{Application.ProductVersion} - no productName - {assetsManager.assetsFileList[0].unityVersion} - {assetsManager.assetsFileList[0].m_TargetPlatform}";
+                Text = $"GenshinStudio v{Application.ProductVersion} - no productName - {Path.GetFileName(assetsManager.assetsFileList[0].originalPath)} - {assetsManager.assetsFileList[0].unityVersion} - {assetsManager.assetsFileList[0].m_TargetPlatform}";
             }
 
             assetListView.VirtualListSize = visibleAssets.Count;
@@ -2140,18 +2141,6 @@ namespace AssetStudioGUI
             logger.ShowErrorMessage = toolStripMenuItem15.Checked;
         }
 
-        private async void selectAIJSONToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            var openFileDialog = new OpenFileDialog();
-            openFileDialog.Title = "Select AssetIndex serialized file (JSON)";
-            openFileDialog.Filter = "JSON File|*.json";
-            openFileDialog.Multiselect = false;
-            if (openFileDialog.ShowDialog(this) == DialogResult.OK)
-            {
-                await Task.Run(() => assetsManager.LoadAIJSON(openFileDialog.FileName));
-            }
-        }
-
         private async void buildBLKMapToolStripMenuItem_Click(object sender, EventArgs e)
         {
             var openFolderDialog = new OpenFolderDialog();
@@ -2201,7 +2190,7 @@ namespace AssetStudioGUI
                 
                 File.WriteAllText(path, json);
             }
-            var loaded = await assetsManager.LoadAIJSON(path, true);
+            var loaded = await assetsManager.LoadAIJSON(path);
             if (loaded)
                 Logger.Info("AssetIndex loaded successfully !!");
             SpecifyAIVersionUpdate(true);

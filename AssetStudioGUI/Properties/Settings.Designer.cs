@@ -191,6 +191,21 @@ namespace AssetStudioGUI.Properties
                 this["exportIndexObject"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool disableRndrr
+        {
+            get
+            {
+                return ((bool)(this["disableRndrr"]));
+            }
+            set
+            {
+                this["disableRndrr"] = value;
+            }
+        }
 
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
