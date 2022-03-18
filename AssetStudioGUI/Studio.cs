@@ -269,10 +269,7 @@ namespace AssetStudioGUI
                                         assetItem.Container = bundleInfo.Path;
                                         assetItem.Text = Path.GetFileName(bundleInfo.Path);
                                     }
-                                    else
-                                    {
-                                        assetItem.Text = binName;
-                                    }
+                                    if (string.IsNullOrEmpty(assetItem.Text)) assetItem.Text = binName;
                                 } 
                             }
                             else assetItem.Text = string.Format("BinFile #{0}", assetItem.m_PathID);
