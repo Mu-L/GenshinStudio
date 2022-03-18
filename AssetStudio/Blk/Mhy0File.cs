@@ -107,7 +107,6 @@ namespace AssetStudio
             var decompressedSize = ReadScrambledInt1(data, 0x20);
             var decompressed = new byte[decompressedSize];
 
-
             var numWrite = LZ4Codec.Decode(data, 0x27, data.Length - 0x27, decompressed, 0, decompressedSize);
             if (numWrite != decompressedSize)
                 throw new IOException($"{string.Format("0x{0:x8}", OriginalPos)} doesn't point to a valid mhy0, Lz4 decompression error, write {numWrite} bytes but expected {decompressedSize} bytes");
