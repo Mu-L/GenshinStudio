@@ -47,14 +47,17 @@ namespace AssetStudio
                         var m_EnableShadowCulling = reader.ReadByte();
                         var m_EnableGpuQuery = reader.ReadByte();
                         var m_AllowHalfResolution = reader.ReadByte();
-                        var m_IsRainOccluder = reader.ReadBoolean();
-                        var m_IsDynamicAOOccluder = reader.ReadBoolean();
-                        var m_IsHQDynamicAOOccluder = reader.ReadBoolean();
-                        var m_IsCloudObject = reader.ReadBoolean();
-                        var m_IsInteriorVolume = reader.ReadBoolean();
-                        var m_IsDynamic = reader.ReadBoolean();
+                        var m_AllowPerMaterialProp = reader.ReadByte();
+                        var m_IsRainOccluder = reader.ReadByte();
+                        var m_IsDynamicAOOccluder = reader.ReadByte();
+                        var m_IsHQDynamicAOOccluder = reader.ReadByte();
+                        var m_IsCloudObject = reader.ReadByte();
+                        var m_IsInteriorVolume = reader.ReadByte();
+                        var m_IsDynamic = reader.ReadByte();
                         var m_UseTessellation = reader.ReadByte();
                         var m_IsTerrainTessInfo = reader.ReadByte();
+                        var m_UseVertexLightInForward = reader.ReadByte();
+                        var m_CombineSubMeshInGeoPass = reader.ReadByte();
                     }
                     if (version[0] >= 2021) //2021.1 and up
                     {
@@ -95,6 +98,8 @@ namespace AssetStudio
 
                 var m_LightmapIndex = reader.ReadUInt16();
                 var m_LightmapIndexDynamic = reader.ReadUInt16();
+                if (m_LightmapIndex != 0xFFFF || m_LightmapIndexDynamic != 0xFFFF)
+                    throw new Exception("Not Supported !! skipping....");   
             }
 
             if (version[0] >= 3) //3.0 and up

@@ -32,18 +32,19 @@ namespace AssetStudio
         public async Task<bool> FromFile(string path)
         {
             Clear();
-
-            var stream = File.OpenRead(path);
-            var bytes = new byte[stream.Length];
-            var count = await stream.ReadAsync(bytes, 0, (int)stream.Length);
-
-            if (count != stream.Length) throw new Exception("Error While Reading File");
-            var json = Encoding.UTF8.GetString(bytes);
-
-            var obj = JsonConvert.DeserializeObject<AssetIndex>(json);
-            if (obj != null)
+            using (var stream = File.OpenRead(path))
             {
-                return MapToResourceIndex(obj);
+                var bytes = new byte[stream.Length];
+                var count = await stream.ReadAsync(bytes, 0, (int)stream.Length);
+
+                if (count != stream.Length) throw new Exception("Error While Reading File");
+                var json = Encoding.UTF8.GetString(bytes);
+
+                var obj = JsonConvert.DeserializeObject<AssetIndex>(json);
+                if (obj != null)
+                {
+                    return MapToResourceIndex(obj);
+                }
             }
             return false;
         }

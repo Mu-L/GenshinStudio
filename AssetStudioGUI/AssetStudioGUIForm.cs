@@ -266,14 +266,12 @@ namespace AssetStudioGUI
                 Text = $"GenshinStudio v{Application.ProductVersion} - no productName - {Path.GetFileName(assetsManager.assetsFileList[0].originalPath)} - {assetsManager.assetsFileList[0].unityVersion} - {assetsManager.assetsFileList[0].m_TargetPlatform}";
             }
 
-            assetListView.VirtualListSize = visibleAssets.Count;
 
-            sceneTreeView.BeginUpdate();
+            assetListView.VirtualListSize = visibleAssets.Count;
             sceneTreeView.Nodes.AddRange(treeNodeCollection.ToArray());
+            sceneTreeView.BeginUpdate();
             foreach (var node in treeNodeCollection)
-            {
                 node.HideCheckBox();
-            }
             sceneTreeView.EndUpdate();
             treeNodeCollection.Clear();
 
@@ -2148,7 +2146,7 @@ namespace AssetStudioGUI
             if (openFolderDialog.ShowDialog(this) == DialogResult.OK)
             {
                 Logger.Info("scanning for BLK files");
-                var files = Directory.EnumerateFiles(openFolderDialog.Folder, "*.blk", SearchOption.AllDirectories);
+                var files = Directory.GetFiles(openFolderDialog.Folder, "*.blk", SearchOption.AllDirectories).ToList();
                 Logger.Info(string.Format("found {0} BLK files", files.Count()));
                 await Task.Run(() => assetsManager.BuildBlkMap(files));
             }
@@ -2161,7 +2159,7 @@ namespace AssetStudioGUI
             if (openFolderDialog.ShowDialog(this) == DialogResult.OK)
             {
                 Logger.Info("scanning for CAB files");
-                var files = Directory.EnumerateFiles(openFolderDialog.Folder, "CAB-*", SearchOption.AllDirectories);
+                var files = Directory.GetFiles(openFolderDialog.Folder, "CAB-*", SearchOption.AllDirectories).ToList();
                 Logger.Info(string.Format("found {0} CAB files", files.Count()));
                 await Task.Run(() => assetsManager.BuildCABMap(files));
             }

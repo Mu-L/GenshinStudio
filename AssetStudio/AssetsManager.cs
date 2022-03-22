@@ -12,7 +12,6 @@ namespace AssetStudio
     public class AssetsManager
     {
         public string SpecifyUnityVersion;
-        public int BlkCount = 0;
         public Dictionary<string, BlockInfo> BLKMap = new Dictionary<string, BlockInfo>();
         public Dictionary<string, string> CABMap = new Dictionary<string, string>();
         public List<SerializedFile> assetsFileList = new List<SerializedFile>();
@@ -25,7 +24,7 @@ namespace AssetStudio
         private HashSet<string> importFilesHash = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         private HashSet<string> assetsFileListHash = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
-        public void BuildBlkMap(IEnumerable<string> files)
+        public void BuildBlkMap(List<string> files)
         {
             Logger.Info(string.Format("Building BLKMap"));
             try
@@ -33,23 +32,27 @@ namespace AssetStudio
                 var collision = 0;
                 var offsets = new List<long>();
                 BLKMap.Clear();
-                foreach (var file in files)
+                Progress.Reset();
+                for (int i = 0; i < files.Count; i++)
                 {
-                    var reader = new FileReader(file);
-                    var blkfile = new BlkFile(reader);
-                    foreach (var mhy0 in blkfile.Files)
+                    var file = files[i];
+                    using (var reader = new FileReader(file))
                     {
-                        foreach (var f in mhy0.fileList)
+                        var blkfile = new BlkFile(reader);
+                        foreach (var mhy0 in blkfile.Files)
                         {
-                            if (BLKMap.ContainsKey(f.path))
+                            foreach (var f in mhy0.fileList)
                             {
-                                collision += 1;
-                                continue;
+                                if (BLKMap.ContainsKey(f.path))
+                                {
+                                    collision += 1;
+                                    continue;
+                                }
+                                BLKMap.Add(f.path, new BlockInfo(file, mhy0.OriginalPos));
                             }
-                            BLKMap.Add(f.path, new BlockInfo(file, mhy0.OriginalPos));
                         }
                     }
-
+                    Progress.Report(i + 1, files.Count);
                 }
 
                 BLKMap = BLKMap.OrderBy(pair => pair.Value).ToDictionary(pair => pair.Key, pair => pair.Value);
@@ -99,7 +102,7 @@ namespace AssetStudio
                 Logger.Warning($"BLKMap was not loaded, {e.Message}");
             }
         }
-        public void BuildCABMap(IEnumerable<string> files)
+        public void BuildCABMap(List<string> files)
         {
             Logger.Info(string.Format("Building CABMap"));
             try
@@ -107,14 +110,17 @@ namespace AssetStudio
                 var collision = 0;
                 var offsets = new List<long>();
                 CABMap.Clear();
-                foreach (var file in files)
+                Progress.Reset();
+                for (int i = 0; i < files.Count; i++)
                 {
+                    var file = files[i];
                     if (CABMap.ContainsKey(Path.GetFileNameWithoutExtension(file)))
                     {
                         collision += 1;
                         continue;
                     }
                     CABMap.Add(Path.GetFileNameWithoutExtension(file), file);
+                    Progress.Report(i + 1, files.Count);
                 }
 
                 CABMap = CABMap.OrderBy(pair => pair.Value).ToDictionary(pair => pair.Key, pair => pair.Value);
@@ -234,7 +240,6 @@ namespace AssetStudio
                     LoadBundleFile(reader);
                     break;
                 case FileType.BlkFile:
-                    BlkCount = 0;
                     LoadBlkFile(reader);
                     break;
                 case FileType.WebFile:
@@ -503,19 +508,16 @@ namespace AssetStudio
             }
         }
 
-        private void LoadBlkFile(FileReader reader, long offset = -1)
+        private void LoadBlkFile(FileReader reader)
         {
-            if (offset == -1)
+            if (reader.MHY0Pos == -1)
                 Logger.Info("Loading " + reader.FileName);
             else
-                Logger.Info("Loading mhy0 in " + reader.FileName + " at " + string.Format("0x{0:x8}", offset));
+                Logger.Info("Loading mhy0 in " + reader.FileName + " at " + string.Format("0x{0:x8}", reader.MHY0Pos));
             try
             {
                 BlkFile blkFile;
-                if (offset != -1)
-                    blkFile = new BlkFile(reader, offset);
-                else
-                    blkFile = new BlkFile(reader);
+                blkFile = new BlkFile(reader);
                 foreach (var mhy0 in blkFile.Files)
                 {
                     foreach (var file in mhy0.fileList)
@@ -554,9 +556,13 @@ namespace AssetStudio
 
                                     if (File.Exists(sharedFilePath))
                                     {
-                                        LoadBlkFile(new FileReader(sharedFilePath), blockInfo.Offset);
-                                        Progress.Report(++BlkCount, assetsFileListHash.Count);
-                                        importFilesHash.Add(sharedFileName);
+                                        using (Stream shardFileReader = File.OpenRead(sharedFilePath))
+                                        {
+                                            FileReader fileReader = new FileReader(sharedFilePath, shardFileReader, blockInfo.Offset);
+                                            LoadFile(fileReader);
+                                            importFilesHash.Add(sharedFileName);
+                                        }
+                                        //LoadBlkFile(new FileReader(sharedFilePath), blockInfo.Offset);
                                     }
                                 }
                             }

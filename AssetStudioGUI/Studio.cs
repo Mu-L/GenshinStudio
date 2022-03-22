@@ -113,11 +113,12 @@ namespace AssetStudioGUI
 
         private static int ExtractBlkFile(FileReader reader, string savePath)
         {
+            BlkFile blkFile;
             StatusStripUpdate($"Decompressing {reader.FileName} ...");
 
-            var blkFile = new BlkFile(reader);
+            using (reader)
+                blkFile = new BlkFile(reader);
 
-            reader.Dispose();
             var fileList = blkFile.Files.SelectMany(x => x.fileList).ToList();
             if (fileList.Count > 0)
             {

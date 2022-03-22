@@ -13,7 +13,7 @@ namespace AssetStudio
         private List<Mhy0File> _files = null;
         public List<Mhy0File> Files => _files;
 
-        public BlkFile(FileReader reader, long offset = -1)
+        public BlkFile(FileReader reader)
         {
             reader.Endian = EndianType.LittleEndian;
             var magic = reader.ReadUInt32();
@@ -34,17 +34,21 @@ namespace AssetStudio
 
             var memReader = new EndianBinaryReader(new MemoryStream(data), reader.Endian);
             _files = new List<Mhy0File>();
-            if (offset != -1)
+            if (reader.MHY0Pos != -1)
             {
                 try
                 {
-                    memReader.Position = offset;
+                    memReader.Position = reader.MHY0Pos;
                     _files.Add(new Mhy0File(memReader, reader.FullPath));
                 }
                 catch (Exception ex)
                 {
                     Logger.Warning($"Failed to load a mhy0 in {Path.GetFileName(reader.FullPath)}");
                     Logger.Warning(ex.Message);
+                }
+                finally
+                {
+                    memReader.Dispose();
                 }
             }
             else
@@ -62,6 +66,7 @@ namespace AssetStudio
                         break;
                     }
                 }
+                memReader.Dispose();
             }
         }
 
