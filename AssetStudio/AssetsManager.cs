@@ -562,7 +562,6 @@ namespace AssetStudio
                                             LoadFile(fileReader);
                                             importFilesHash.Add(sharedFileName);
                                         }
-                                        //LoadBlkFile(new FileReader(sharedFilePath), blockInfo.Offset);
                                     }
                                 }
                             }
