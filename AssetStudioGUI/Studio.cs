@@ -543,6 +543,7 @@ namespace AssetStudioGUI
                                         new XElement("Type", new XAttribute("id", (int)asset.Type), asset.TypeString),
                                         new XElement("PathID", asset.m_PathID),
                                         new XElement("Source", asset.SourceFile.fullName),
+                                        new XElement("OriginalPath", asset.SourceFile.originalPath),
                                         new XElement("Size", asset.FullSize)
                                     )
                                 )
