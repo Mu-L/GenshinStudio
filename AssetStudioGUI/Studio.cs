@@ -235,7 +235,7 @@ namespace AssetStudioGUI
                                 var preloadEnd = preloadIndex + preloadSize;
                                 for (int k = preloadIndex; k < preloadEnd; k++)
                                 {
-                                    var last = int.Parse(m_Container.Key);
+                                    var last = unchecked((uint)long.Parse(m_Container.Key));
                                     var path = assetsManager.resourceIndex.GetBundlePath(last);
                                     if (!string.IsNullOrEmpty(path)) containers.Add((m_AssetBundle.m_PreloadTable[k], path));
                                     else containers.Add((m_AssetBundle.m_PreloadTable[k], m_Container.Key));
@@ -259,17 +259,24 @@ namespace AssetStudioGUI
                             {
                                 if (indexObject.Names.TryGetValue(m_MiHoYoBinData.m_PathID, out var binName))
                                 {
-                                    var blkName = Path.GetFileNameWithoutExtension(assetsFile.originalPath);
-                                    var blk = ulong.Parse(blkName, NumberStyles.Integer);
-                                    var last = ulong.Parse(binName, NumberStyles.HexNumber);
-                                    var blkHash = (blk << 32) | last;
-                                    var index = assetsManager.resourceIndex.GetAssetIndex(blkHash);
-                                    var bundleInfo = assetsManager.resourceIndex.GetBundleInfo(index);
-                                    if (bundleInfo != null)
+                                    string path = "";
+                                    if (Path.GetExtension(assetsFile.originalPath) == ".blk")
                                     {
-                                        assetItem.Container = bundleInfo.Path;
-                                        assetItem.Text = Path.GetFileName(bundleInfo.Path);
+                                        var blkName = Path.GetFileNameWithoutExtension(assetsFile.originalPath);
+                                        var blk = Convert.ToUInt64(blkName);
+                                        var lastHex = uint.Parse(binName, NumberStyles.HexNumber);
+                                        var blkHash = (blk << 32) | lastHex;
+                                        var index = assetsManager.resourceIndex.GetAssetIndex(blkHash);
+                                        var bundleInfo = assetsManager.resourceIndex.GetBundleInfo(index);
+                                        path = bundleInfo != null ? bundleInfo.Path : "";
                                     }
+                                    else
+                                    {
+                                        var last = uint.Parse(binName, NumberStyles.HexNumber);
+                                        path = assetsManager.resourceIndex.GetBundlePath(last);
+                                    }
+                                    assetItem.Container = path;
+                                    assetItem.Text = Path.GetFileName(path);
                                     if (string.IsNullOrEmpty(assetItem.Text)) assetItem.Text = binName;
                                 } 
                             }
