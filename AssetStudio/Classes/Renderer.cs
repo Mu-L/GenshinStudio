@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -23,7 +24,6 @@ namespace AssetStudio
         public PPtr<Material>[] m_Materials;
         public StaticBatchInfo m_StaticBatchInfo;
         public uint[] m_SubsetIndices;
-
         protected Renderer(ObjectReader reader) : base(reader)
         {
             if (version[0] < 5) //5.0 down
@@ -166,7 +166,7 @@ namespace AssetStudio
                 }
                 else
                 {
-                    var m_SortingLayerID = reader.ReadUInt32();
+                    var m_SortingLayerID = reader.ReadInt32();
                     var m_SortingLayer = reader.ReadInt16();
                 }
 

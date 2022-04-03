@@ -235,10 +235,17 @@ namespace AssetStudioGUI
                                 var preloadEnd = preloadIndex + preloadSize;
                                 for (int k = preloadIndex; k < preloadEnd; k++)
                                 {
-                                    var last = unchecked((uint)long.Parse(m_Container.Key));
-                                    var path = assetsManager.resourceIndex.GetBundlePath(last);
-                                    if (!string.IsNullOrEmpty(path)) containers.Add((m_AssetBundle.m_PreloadTable[k], path));
-                                    else containers.Add((m_AssetBundle.m_PreloadTable[k], m_Container.Key));
+                                    if (long.TryParse(m_Container.Key, out var containerValue))
+                                    {
+                                        var last = unchecked((uint)containerValue);
+                                        var path = assetsManager.resourceIndex.GetBundlePath(last);
+                                        if (!string.IsNullOrEmpty(path))
+                                        {
+                                            containers.Add((m_AssetBundle.m_PreloadTable[k], path));
+                                            continue;
+                                        }
+                                    }
+                                    containers.Add((m_AssetBundle.m_PreloadTable[k], m_Container.Key));
                                 }
                             }
                             assetItem.Text = m_AssetBundle.m_Name;

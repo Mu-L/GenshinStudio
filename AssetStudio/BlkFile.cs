@@ -12,10 +12,10 @@ namespace AssetStudio
     {
         private List<Mhy0File> _files = null;
         public List<Mhy0File> Files => _files;
-
         public BlkFile(FileReader reader)
         {
             reader.Endian = EndianType.LittleEndian;
+
             var magic = reader.ReadUInt32();
             if (magic != 0x006B6C62)
                 throw new Exception("not a blk");
@@ -23,12 +23,12 @@ namespace AssetStudio
             var count = reader.ReadInt32();
             var key = reader.ReadBytes(count);
             reader.ReadBytes(count);
-            BlkKeyScramble(key);
+            KeyScramble(key);
 
             var xorpadSize = reader.ReadUInt16();
             var data = reader.ReadBytes((int)(reader.Length - reader.Position));
 
-            var xorpad = CreateDecryptVector(key, data, Math.Min(xorpadSize, (ushort)0x1000), 0x1000);
+            var xorpad = CreateDecryptVector(key, data, xorpadSize);
             for (int i = 0; i < data.Length; i++)
                 data[i] ^= xorpad[i & 0xFFF];
 
@@ -70,104 +70,82 @@ namespace AssetStudio
             }
         }
 
-        private byte XorCombine(byte[] input, int offset, int size = 16)
-        {
-            byte ret = 0;
-            for (int i = offset; i < offset + size; i++)
-                ret ^= input[i];
-            return ret;
-        }
+        public static byte XorCombine(byte[] bytes, int offset) => bytes.Skip(offset).Take(0x10).Aggregate((b, v) => (byte)(b ^ v));
 
-        private void BlkKeyScramble(byte[] key)
+        private static void KeyScramble(byte[] key)
         {
             // key_scramble1
             for (uint i = 0; i < 0x10; i++)
-                key[i] = KeyScrambleTable[((i & 3) << 8) | key[i]];
+                key[i] = ScrambleConstants.KeyScrambleTable[((i & 3) << 8) | key[i]];
 
             // key_scramble2
-            byte[] expandedKey = new byte[256];
-            for (uint i = 0; i < 16; i++)
-                expandedKey[i * 16] = key[i];
-            for (uint i = 0; i < 256; i++)
-                expandedKey[i] ^= (byte)(BlkStuff1p1[i] ^ StackStuff[i]);
+            var expandedKey = new byte[0x100];
+            for (uint i = 0; i < 0x10; i++)
+                expandedKey[i * 0x10] = key[i];
+            for (uint i = 0; i < expandedKey.Length; i++)
+                expandedKey[i] ^= (byte)(ScrambleConstants.ExpandKeyTable[i] ^ ScrambleConstants.StackStuff[i]);
 
-            byte[] indexScramble = new byte[]
+            uint[] scratch;
+            byte[] scratchByte = new byte[0x10];
+            for (ulong i = 1; i < 0xA; i++)
             {
-                0,  13, 10, 7,
-                4,  1,  14, 11,
-                8,  5,  2,  15,
-                12, 9,  6,  3
-            };
-            uint[] scratch = new uint[4];
-            byte[] scratchByte = new byte[16]; // c# so no pointer casting
-            for (ulong i = 1; i < 10; i++)
-            {
-                // avoid reallocating
-                for (int j = 0; j < 4; j++)
-                    scratch[j] = 0;
-                for (ulong j = 0; j < 4; j++)
+                scratch = new uint[4];
+                for (int j = 0; j < scratch.Length; j++)
                 {
-                    byte temp;
-                    temp = XorCombine(expandedKey, 16 * indexScramble[4 * j]);
-                    scratch[j] ^= BlkStuff1p2[temp];
-                    temp = XorCombine(expandedKey, 16 * indexScramble[4 * j + 1]);
-                    scratch[j] ^= BlkStuff1p3[temp];
-                    temp = XorCombine(expandedKey, 16 * indexScramble[4 * j + 2]);
-                    scratch[j] ^= BlkStuff1p4[temp];
-                    temp = XorCombine(expandedKey, 16 * indexScramble[4 * j + 3]);
-                    scratch[j] ^= BlkStuff1p5[temp];
+                    scratch[j] ^= ScrambleConstants.GetMagicConst(0, expandedKey, j);
+                    scratch[j] ^= ScrambleConstants.GetMagicConst(1, expandedKey, j);
+                    scratch[j] ^= ScrambleConstants.GetMagicConst(2, expandedKey, j);
+                    scratch[j] ^= ScrambleConstants.GetMagicConst(3, expandedKey, j);
                 }
-                for (int j = 0; j < 256; j++)
-                    expandedKey[j] = 0;
+
+                expandedKey = new byte[0x100];
                 Buffer.BlockCopy(scratch, 0, scratchByte, 0, scratchByte.Length);
-                for (int j = 0; j < 16; j++)
-                    expandedKey[j * 16] = scratchByte[j];
-                for (ulong j = 0; j < 256; j++)
+                for (int j = 0; j < scratchByte.Length; j++)
+                    expandedKey[j * 0x10] = scratchByte[j];
+                for (uint j = 0; j < expandedKey.Length; j++)
                 {
-                    ulong v10 = j + (i << 8);
-                    expandedKey[j] ^= (byte)(BlkStuff1p1[v10] ^ StackStuff[v10]);
+                    ulong idx = j + (i << 8);
+                    expandedKey[j] ^= (byte)(ScrambleConstants.ExpandKeyTable[idx] ^ ScrambleConstants.StackStuff[idx]);
                 }
             }
 
-            for (int i = 0; i < 16; i++)
+            for (int i = 0; i < scratchByte.Length; i++)
             {
-                byte t = XorCombine(expandedKey, 16 * indexScramble[i]);
-                scratchByte[i] = (byte)(BlkStuff1p6[t] ^ ~t);
+                byte b = XorCombine(expandedKey, 0x10 * ScrambleConstants.IndexScramble[i]);
+                scratchByte[i] = (byte)(~b ^ ScrambleConstants.MagicShuffle[b]);
             }
-            for (int i = 0; i < 256; i++)
-                expandedKey[i] = 0;
-            for (int i = 0; i < 16; i++)
-                expandedKey[i * 16] = scratchByte[i];
-            for (int i = 0; i < 256; i++)
-                expandedKey[i] ^= (byte)(BlkStuff1p7[i] ^ StackStuff[i + 0xA00]);
 
-            for (int i = 0; i < 16; i++)
-                key[i] = XorCombine(expandedKey, 16 * i);
-            byte[] hard_key = new byte[] { 0xE3, 0xFC, 0x2D, 0x26, 0x9C, 0xC5, 0xA2, 0xEC, 0xD3, 0xF8, 0xC6, 0xD3, 0x77, 0xC2, 0x49, 0xB9 };
-            for (int i = 0; i < 16; i++)
-                key[i] ^= hard_key[i];
+            expandedKey = new byte[0x100];
+            for (int i = 0; i < scratchByte.Length; i++)
+                expandedKey[i * 0x10] = scratchByte[i];
+            for (int i = 0; i < expandedKey.Length; i++)
+                expandedKey[i] ^= (byte)(ScrambleConstants.MagicShuffle2[i] ^ ScrambleConstants.StackStuff[i + 0xA00]);
+            for (int i = 0; i < 0x10; i++)
+                key[i] = XorCombine(expandedKey, 0x10 * i);
+            for (int i = 0; i < 0x10; i++)
+                key[i] ^= ScrambleConstants.InitialKey[i];
         }
 
-        private byte[] CreateDecryptVector(byte[] key, byte[] encryptedData, ushort blockSize, ushort xorpadSize)
+        private byte[] CreateDecryptVector(byte[] key, byte[] encryptedData, ushort blockSize)
         {
-            long XorLong(int offset, long input)
+            long keySeed = -1;
+            blockSize = Math.Min(blockSize, (ushort)0x1000);
+            
+            for (int i = 0; i < blockSize >> 3; i++)
             {
-                // hopefully this gets optimized
-                var og = BitConverter.ToInt64(encryptedData, offset);
-                return og ^ input;
+                var vec = BitConverter.ToInt64(encryptedData, i * 8);
+                keySeed ^= vec;
             }
-            long v12 = -1;
-            for (int v9 = 0; v9 < blockSize >> 3; v9++)
-                v12 = XorLong(v9 * 8, v12);
 
-            var key0 = BitConverter.ToUInt64(key, 0);
-            var key1 = BitConverter.ToUInt64(key, 8);
-            var seed = key0 ^ key1 ^ (ulong)v12 ^ 0x567BA22BABB08098;
+            var keyLow = BitConverter.ToUInt64(key, 0);
+            var keyHigh = BitConverter.ToUInt64(key, 8);
+            var seed = keyLow ^ keyHigh ^ (ulong)keySeed ^ ScrambleConstants.ConstKeySeed;
 
             var rand = new MT19937_64(seed);
-            var xorpad = new byte[xorpadSize];
-            for (int i = 0; i < xorpadSize >> 3; i++)
+            var xorpad = new byte[0x1000];
+            for (int i = 0; i < xorpad.Length >> 3; i++)
                 Buffer.BlockCopy(BitConverter.GetBytes(rand.Int63()), 0, xorpad, i * 8, 8);
+
             return xorpad;
         }
     }

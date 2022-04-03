@@ -31,6 +31,8 @@ namespace AssetStudio
         public List<SerializedType> m_RefTypes;
         public string userInformation;
 
+        private static int DecryptClassId(int id) => (id ^ 0x23746FBE) - 3;
+
         public SerializedFile(FileReader reader, AssetsManager assetsManager, string path = null)
         {
             this.assetsManager = assetsManager;
@@ -241,7 +243,7 @@ namespace AssetStudio
             {
                 byte[] classIdBytes = BitConverter.GetBytes(type.classID);
                 Array.Reverse(classIdBytes);
-                type.classID = (BitConverter.ToInt32(classIdBytes, 0) ^ 0x23746FBE) - 3;
+                type.classID = DecryptClassId(BitConverter.ToInt32(classIdBytes, 0));
             }
 
             if (header.m_Version >= SerializedFileFormatVersion.kRefactoredClassId)

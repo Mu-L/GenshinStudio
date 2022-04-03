@@ -14,16 +14,16 @@ namespace AssetStudio
         public Dictionary<int, Block> BlockInfoMap;
         public Dictionary<int, byte> BlockMap;
         public Dictionary<ulong, ulong> AssetMap;
-        public List<Dictionary<int, BundleInfo>> AssetLocationMap;
+        public List<Dictionary<uint, BundleInfo>> AssetLocationMap;
         public List<int> BlockSortList;
         public ResourceIndex()
         {
             BlockSortList = new List<int>();
             AssetMap = new Dictionary<ulong, ulong>();
-            AssetLocationMap = new List<Dictionary<int, BundleInfo>>(0x100);
+            AssetLocationMap = new List<Dictionary<uint, BundleInfo>>(0x100);
             for (int i = 0; i < AssetLocationMap.Capacity; i++)
             {
-                AssetLocationMap.Add(new Dictionary<int, BundleInfo>(0x1FF));
+                AssetLocationMap.Add(new Dictionary<uint, BundleInfo>(0x1FF));
             }
             BundleDependencyMap = new Dictionary<int, List<int>>();
             BlockInfoMap = new Dictionary<int, Block>();
@@ -70,7 +70,7 @@ namespace AssetStudio
                         var bundleInfo = new BundleInfo(asset.Key, subAsset.Name);
                         var blockInfo = asset_index.Assets[asset.Key];
                         ulong key = (((ulong)blockInfo.Id) << 32) | subAsset.PathHashLast;
-                        AssetLocationMap[subAsset.PathHashPre].Add((int)subAsset.PathHashLast, bundleInfo);
+                        AssetLocationMap[subAsset.PathHashPre].Add(subAsset.PathHashLast, bundleInfo);
                         AssetMap[key] = ((ulong)subAsset.PathHashLast) << 8 | subAsset.PathHashPre;
                     }
                 }
@@ -124,7 +124,7 @@ namespace AssetStudio
             }
             return null;
         }
-        public string GetBundlePath(int last)
+        public string GetBundlePath(uint last)
         {
             foreach (var location in AssetLocationMap)
             {
@@ -137,9 +137,9 @@ namespace AssetStudio
             if (AssetMap.TryGetValue(blkHash, out var value)) return value;
             else return 0;
         }
-        public List<int> GetAllAssetIndices(int bundle)
+        public List<uint> GetAllAssetIndices(int bundle)
         {
-            var hashes = new List<int>();
+            var hashes = new List<uint>();
             for (int i = 0; i < AssetLocationMap.Capacity; i++)
             {
                 foreach (var pair in AssetLocationMap[i])
@@ -213,7 +213,7 @@ namespace AssetStudio
     public class Asset
     {
         public ulong Hash;
-        public int Last => unchecked((int)(Hash >> 8));
+        public uint Last => (uint)(Hash >> 8);
         public byte Pre => (byte)(Hash & 0xFF);
         public Asset(ulong hash)
         {

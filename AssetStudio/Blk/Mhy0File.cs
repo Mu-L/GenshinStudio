@@ -1,8 +1,8 @@
-﻿using System;
+﻿using K4os.Compression.LZ4;
+using System;
 using System.IO;
 using System.Linq;
 using System.Text;
-using K4os.Compression.LZ4;
 
 namespace AssetStudio
 {
@@ -35,72 +35,63 @@ namespace AssetStudio
         private Node[] m_DirectoryInfo;
 
         public StreamFile[] fileList;
-        private void Scramble2(byte[] input, int offset)
+        private static void Scramble2(byte[] input, int offset)
         {
-            byte[] indexScramble = new byte[] {
-                0x0B,0x02,0x08,0x0C,0x01,0x05,0x00,0x0F,0x06,0x07,0x09,0x03,0x0D,0x04,0x0E,0x0A,
-                0x04,0x05,0x07,0x0A,0x02,0x0F,0x0B,0x08,0x0E,0x0D,0x09,0x06,0x0C,0x03,0x00,0x01,
-                0x08,0x00,0x0C,0x06,0x04,0x0B,0x07,0x09,0x05,0x03,0x0F,0x01,0x0D,0x0A,0x02,0x0E,
-            };
-            byte[] v20_1 = new byte[] {
-                0x48, 0x14, 0x36, 0xED, 0x8E, 0x44, 0x5B, 0xB6
-            };
-            byte[] v25 = {
-                0xA7, 0x99, 0x66, 0x50, 0xB9, 0x2D, 0xF0, 0x78
-            };
-            byte[] v20_0 = new byte[16];
-            for (int v17 = 0; v17 < 3; v17++)
+            byte[] key = new byte[0x10];
+            for (int i = 0; i < 3; i++)
             {
-                for (int i = 0; i < 16; ++i)
-                    v20_0[i] = input[offset + indexScramble[32 + -16 * v17 + i]];
-                Buffer.BlockCopy(v20_0, 0, input, offset, 16);
-                for (int j = 0; j < 16; ++j)
+                for (int j = 0; j < 0x10; j++)
+                    key[j] = input[offset + ScrambleConstants.Mhy0IndexScramble[0x20 + -0x10 * i + j]];
+
+                Buffer.BlockCopy(key, 0, input, offset, 0x10);
+                for (int j = 0; j < 0x10; j++)
                 {
-                    byte v14 = input[offset + j];
-                    int v1 = j % 8;
-                    if (v14 == 0 || v25[v1] == 0)
-                        v14 = (byte)(BlkFile.KeyScrambleTable[j % 4 * 256] ^ v20_1[j % 8]);
+                    byte b = input[offset + j];
+                    int idx = j % 8;
+                    if (b == 0 || ScrambleConstants.Mhy0ConstKey1[idx] == 0)
+                        b = (byte)(ScrambleConstants.KeyScrambleTable[j % 4 * 0x100] ^ ScrambleConstants.Mhy0ConstKey[idx]);
                     else
-                        v14 = (byte)(v20_1[v1] ^ BlkFile.KeyScrambleTable[j % 4 * 256 | Mhy0Table1[(Mhy0Table2[v25[v1]] + Mhy0Table2[v14]) % 255]]);
-                    input[offset + j] = v14;
+                        b = (byte)(ScrambleConstants.Mhy0ConstKey[idx] ^ ScrambleConstants.KeyScrambleTable[j % 4 * 0x100 | ScrambleConstants.Mhy0Table1[(ScrambleConstants.Mhy0Table2[ScrambleConstants.Mhy0ConstKey1[idx]] + ScrambleConstants.Mhy0Table2[b]) % 0xFF]]);
+                    input[offset + j] = b;
                 }
             }
         }
 
-        private void Scramble(byte[] input, int offset, ulong a2, ulong a4)
+        private static void Scramble(byte[] input, int offset, ulong blockSize, ulong entrySize)
         {
-            var v10 = (int)((a4 + 15) & 0xFFFFFFF0);
-            for (int i = 0; i < v10; i += 16)
+            var size = (int)((entrySize + 0xF) & 0xFFFFFFF0);
+            for (int i = 0; i < size; i += 0x10)
                 Scramble2(input, offset + i + 4);
-            for (int j = 0; j < 4; j++)
-                input[offset + j] ^= input[offset + j + 4];
-            ulong v8 = (ulong)v10 + 4;
-            int v13 = 0;
-            while (v8 < a2 && v13 == 0)
+            for (int i = 0; i < 4; i++)
+                input[offset + i] ^= input[offset + i + 4];
+
+            ulong curEntry = (ulong)size + 4;
+            var finished = false;
+            while (curEntry < blockSize && !finished)
             {
-                for (ulong k = 0; k < a4; ++k)
+                for (ulong i = 0; i < entrySize; i++)
                 {
-                    input[(ulong)offset + k + v8] ^= input[(ulong)offset + k + 4];
-                    if (k + v8 >= a2 - 1)
+                    input[(ulong)offset + i + curEntry] ^= input[(ulong)offset + i + 4];
+                    if (i + curEntry >= blockSize - 1)
                     {
-                        v13 = 1;
+                        finished = true;
                         break;
                     }
                 }
-                v8 += a4;
+                curEntry += entrySize;
             }
         }
-        private int ReadScrambledInt1(byte[] a, int offset)
+        private static int ReadScrambledInt1(byte[] a, int offset)
         {
-            return a[offset + 1] | (a[offset + 6] << 8) | (a[offset + 3] << 16) | (a[offset + 2] << 24);
+            return a[offset + 1] | (a[offset + 6] << 8) | (a[offset + 3] << 0x10) | (a[offset + 2] << 0x18);
         }
 
-        private int ReadScrambledInt2(byte[] a, int offset)
+        private static int ReadScrambledInt2(byte[] a, int offset)
         {
-            return a[offset + 2] | (a[offset + 4] << 8) | (a[offset + 0] << 16) | (a[offset + 5] << 24);
+            return a[offset + 2] | (a[offset + 4] << 8) | (a[offset + 0] << 0x10) | (a[offset + 5] << 0x18);
         }
 
-        private int CalcOffset(int value) => value * 0x113 + 6;
+        private static int CalcOffset(int value) => value * 0x113 + 6;
 
         private byte[] DecompressHeader(byte[] data)
         {

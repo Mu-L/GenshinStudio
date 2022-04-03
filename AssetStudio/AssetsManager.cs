@@ -523,10 +523,10 @@ namespace AssetStudio
                     foreach (var file in mhy0.fileList)
                     {
                         var dummyPath = Path.Combine(Path.GetDirectoryName(reader.FullPath), file.fileName);
-                        var subReader = new FileReader(dummyPath, file.stream);
-                        if (subReader.FileType == FileType.AssetsFile)
+                        var cabReader = new FileReader(dummyPath, file.stream);
+                        if (cabReader.FileType == FileType.AssetsFile)
                         {
-                            var assetsFile = new SerializedFile(subReader, this, reader.FullPath);
+                            var assetsFile = new SerializedFile(cabReader, this, reader.FullPath);
                             CheckStrippedVersion(assetsFile);
                             assetsFileList.Add(assetsFile);
                             assetsFileListHash.Add(assetsFile.fileName);
@@ -568,7 +568,7 @@ namespace AssetStudio
                         }
                         else
                         {
-                            resourceFileReaders[file.fileName] = subReader; //TODO
+                            resourceFileReaders[file.fileName] = cabReader; //TODO
                         }
                     }
                 }

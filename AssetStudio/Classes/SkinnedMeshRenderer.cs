@@ -26,7 +26,6 @@ namespace AssetStudio
                 var m_DisableAnimationWhenOffscreen = new PPtr<Animation>(reader);
             }
 
-            //var unk1 = reader.ReadInt64();
             m_Mesh = new PPtr<Mesh>(reader);
 
             m_Bones = new PPtr<Transform>[reader.ReadInt32()];
