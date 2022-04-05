@@ -280,11 +280,10 @@ namespace AssetStudioGUI
                                     else
                                     {
                                         var last = uint.Parse(binName, NumberStyles.HexNumber);
-                                        path = assetsManager.resourceIndex.GetBundlePath(last);
+                                        path = assetsManager.resourceIndex.GetBundlePath(last) ?? "";
                                     }
                                     assetItem.Container = path;
-                                    assetItem.Text = Path.GetFileName(path);
-                                    if (string.IsNullOrEmpty(assetItem.Text)) assetItem.Text = binName;
+                                    assetItem.Text = !string.IsNullOrEmpty(assetItem.Text) ? Path.GetFileName(path) : binName;
                                 } 
                             }
                             else assetItem.Text = string.Format("BinFile #{0}", assetItem.m_PathID);
