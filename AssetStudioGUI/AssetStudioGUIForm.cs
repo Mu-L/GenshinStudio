@@ -775,8 +775,7 @@ namespace AssetStudioGUI
                         PreviewAudioClip(assetItem, m_AudioClip);
                         break;
                     case Shader m_Shader:
-                        //PreviewShader(m_Shader);
-                        StatusStripUpdate("Shaders are not supported.");
+                        PreviewShader(m_Shader);
                         break;
                     case TextAsset m_TextAsset:
                         PreviewTextAsset(m_TextAsset);

@@ -16,7 +16,7 @@ namespace AssetStudio
             {
                 var decompressedBytes = new byte[shader.decompressedSize];
                 LZ4Codec.Decode(shader.m_SubProgramBlob, decompressedBytes);
-                using (var blobReader = new BinaryReader(new MemoryStream(decompressedBytes)))
+                using (var blobReader = new EndianBinaryReader(new MemoryStream(decompressedBytes), EndianType.LittleEndian))
                 {
                     var program = new ShaderProgram(blobReader, shader.version);
                     return header + program.Export(Encoding.UTF8.GetString(shader.m_Script));
@@ -36,11 +36,9 @@ namespace AssetStudio
             var shaderPrograms = new ShaderProgram[shader.platforms.Length];
             for (var i = 0; i < shader.platforms.Length; i++)
             {
-                var compressedBytes = new byte[shader.compressedLengths[i]];
-                Buffer.BlockCopy(shader.compressedBlob, (int)shader.offsets[i], compressedBytes, 0, (int)shader.compressedLengths[i]);
-                var decompressedBytes = new byte[shader.decompressedLengths[i]];
-                LZ4Codec.Decode(compressedBytes, decompressedBytes);
-                using (var blobReader = new BinaryReader(new MemoryStream(decompressedBytes)))
+                var decompressedBytes = new byte[shader.compressedLengths[i]];
+                Buffer.BlockCopy(shader.compressedBlob, (int)shader.offsets[i], decompressedBytes, 0, (int)shader.compressedLengths[i]);
+                using (var blobReader = new EndianBinaryReader(new MemoryStream(decompressedBytes), EndianType.LittleEndian))
                 {
                     shaderPrograms[i] = new ShaderProgram(blobReader, shader.version);
                 }
@@ -858,7 +856,7 @@ namespace AssetStudio
     {
         public ShaderSubProgram[] m_SubPrograms;
 
-        public ShaderProgram(BinaryReader reader, int[] version)
+        public ShaderProgram(EndianBinaryReader reader, int[] version)
         {
             var subProgramsCapacity = reader.ReadInt32();
             m_SubPrograms = new ShaderSubProgram[subProgramsCapacity];
@@ -900,7 +898,7 @@ namespace AssetStudio
         public string[] m_LocalKeywords;
         public byte[] m_ProgramCode;
 
-        public ShaderSubProgram(BinaryReader reader)
+        public ShaderSubProgram(EndianBinaryReader reader)
         {
             //LoadGpuProgramFromData
             //201509030 - Unity 5.3
