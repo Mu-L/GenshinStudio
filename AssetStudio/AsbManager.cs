@@ -131,8 +131,6 @@ namespace AssetStudio
                     }
                 }
                 Logger.Info(string.Format("Loaded BLKMap !!"));
-                var json = Newtonsoft.Json.JsonConvert.SerializeObject(BLKMap, Newtonsoft.Json.Formatting.Indented);
-                File.WriteAllText("output.json", json);
             }
             catch (Exception e)
             {
@@ -231,8 +229,6 @@ namespace AssetStudio
                     }
                 }
                 Logger.Info(string.Format("Loaded CABMap !!"));
-                var json = Newtonsoft.Json.JsonConvert.SerializeObject(CABMap, Newtonsoft.Json.Formatting.Indented);
-                File.WriteAllText("output1.json", json);
             }
             catch (Exception e)
             {
