@@ -34,12 +34,15 @@ namespace AssetStudio
 
             var memReader = new EndianBinaryReader(new MemoryStream(data), reader.Endian);
             _files = new List<Mhy0File>();
-            if (reader.MHY0Pos != -1)
+            if (reader.MHY0Pos.Length != 0)
             {
                 try
                 {
-                    memReader.Position = reader.MHY0Pos;
-                    _files.Add(new Mhy0File(memReader, reader.FullPath));
+                    foreach (var pos in reader.MHY0Pos)
+                    {
+                        memReader.Position = pos;
+                        _files.Add(new Mhy0File(memReader, reader.FullPath));
+                    }
                 }
                 catch (Exception ex)
                 {

@@ -110,7 +110,7 @@ namespace AssetStudio
             OriginalPos = reader.Position;
             var magic = reader.ReadUInt32();
             if (magic != 0x3079686D)
-                throw new Exception("not a mhy0");
+                throw new Exception($"not a mhy0 at {string.Format("0x{ 0:x8 }", OriginalPos)}");
 
             m_Header = new Header();
             m_Header.headerSize = reader.ReadInt32();

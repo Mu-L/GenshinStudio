@@ -8,15 +8,15 @@ using System.Threading.Tasks;
 
 namespace AssetStudio
 {
-    public class ResourceIndex
+    public static class ResourceIndex
     {
-        public Dictionary<int, List<int>> BundleDependencyMap;
-        public Dictionary<int, Block> BlockInfoMap;
-        public Dictionary<int, byte> BlockMap;
-        public Dictionary<ulong, ulong> AssetMap;
-        public List<Dictionary<uint, BundleInfo>> AssetLocationMap;
-        public List<int> BlockSortList;
-        public ResourceIndex()
+        public static Dictionary<int, List<int>> BundleDependencyMap;
+        public static Dictionary<int, Block> BlockInfoMap;
+        public static Dictionary<int, byte> BlockMap;
+        public static Dictionary<ulong, ulong> AssetMap;
+        public static List<Dictionary<uint, BundleInfo>> AssetLocationMap;
+        public static List<int> BlockSortList;
+        static ResourceIndex()
         {
             BlockSortList = new List<int>();
             AssetMap = new Dictionary<ulong, ulong>();
@@ -29,26 +29,36 @@ namespace AssetStudio
             BlockInfoMap = new Dictionary<int, Block>();
             BlockMap = new Dictionary<int, byte>();
         }
-        public async Task<bool> FromFile(string path)
+        public static async Task<bool> FromFile(string path)
         {
-            Clear();
-            using (var stream = File.OpenRead(path))
+            Logger.Info(string.Format("Loading AssetIndex JSON"));
+            try
             {
-                var bytes = new byte[stream.Length];
-                var count = await stream.ReadAsync(bytes, 0, (int)stream.Length);
-
-                if (count != stream.Length) throw new Exception("Error While Reading File");
-                var json = Encoding.UTF8.GetString(bytes);
-
-                var obj = JsonConvert.DeserializeObject<AssetIndex>(json);
-                if (obj != null)
+                Clear();
+                using (var stream = File.OpenRead(path))
                 {
-                    return MapToResourceIndex(obj);
+                    var bytes = new byte[stream.Length];
+                    var count = await stream.ReadAsync(bytes, 0, (int)stream.Length);
+
+                    if (count != stream.Length) throw new Exception("Error While Reading File");
+                    var json = Encoding.UTF8.GetString(bytes);
+
+                    var obj = JsonConvert.DeserializeObject<AssetIndex>(json);
+                    if (obj != null)
+                    {
+                        return MapToResourceIndex(obj);
+                    }
                 }
+            }
+            catch (Exception e)
+            {
+                Logger.Error("AssetIndex JSON was not loaded");
+                Console.WriteLine(e.ToString());
+                return false;
             }
             return false;
         }
-        public void Clear()
+        public static void Clear()
         {
             BundleDependencyMap.Clear();
             BlockInfoMap.Clear();
@@ -57,7 +67,7 @@ namespace AssetStudio
             AssetLocationMap.ForEach(x => x.Clear());
             BlockSortList.Clear();
         }
-        public bool MapToResourceIndex(AssetIndex asset_index)
+        public static bool MapToResourceIndex(AssetIndex asset_index)
         {
             try
             {
@@ -90,7 +100,7 @@ namespace AssetStudio
 
             return true;
         }
-        public List<BundleInfo> GetAllAssets()
+        public static List<BundleInfo> GetAllAssets()
         {
             var hashes = new List<BundleInfo>();
             for (int i = 0; i < AssetLocationMap.Capacity; i++)
@@ -102,7 +112,7 @@ namespace AssetStudio
             }
             return hashes;
         }
-        public List<BundleInfo> GetAssets(int bundle)
+        public static List<BundleInfo> GetAssets(int bundle)
         {
             var hashes = new List<BundleInfo>();
             for (int i = 0; i < AssetLocationMap.Capacity; i++)
@@ -115,7 +125,7 @@ namespace AssetStudio
             }
             return hashes;
         }
-        public BundleInfo GetBundleInfo(ulong hash)
+        public static BundleInfo GetBundleInfo(ulong hash)
         {
             var asset = new Asset(hash);
             if (AssetLocationMap.ElementAtOrDefault(asset.Pre) != null)
@@ -124,7 +134,7 @@ namespace AssetStudio
             }
             return null;
         }
-        public string GetBundlePath(uint last)
+        public static string GetBundlePath(uint last)
         {
             foreach (var location in AssetLocationMap)
             {
@@ -132,12 +142,12 @@ namespace AssetStudio
             }
             return null;
         }
-        public ulong GetAssetIndex(ulong blkHash)
+        public static ulong GetAssetIndex(ulong blkHash)
         {
             if (AssetMap.TryGetValue(blkHash, out var value)) return value;
             else return 0;
         }
-        public List<uint> GetAllAssetIndices(int bundle)
+        public static List<uint> GetAllAssetIndices(int bundle)
         {
             var hashes = new List<uint>();
             for (int i = 0; i < AssetLocationMap.Capacity; i++)
@@ -150,7 +160,7 @@ namespace AssetStudio
             }
             return hashes;
         }
-        public List<int> GetBundles(int id)
+        public static List<int> GetBundles(int id)
         {
             var bundles = new List<int>();
             foreach (var block in BlockInfoMap)
@@ -162,12 +172,12 @@ namespace AssetStudio
             }
             return bundles;
         }
-        public Block GetBlockInfo(int bundle)
+        public static Block GetBlockInfo(int bundle)
         {
             if (BlockInfoMap.TryGetValue(bundle, out var blk)) return blk;
             else return null;
         }
-        public BlockFile GetBlockFile(int id)
+        public static BlockFile GetBlockFile(int id)
         {
             if (BlockMap.TryGetValue(id, out var languageCode))
             {
@@ -175,7 +185,7 @@ namespace AssetStudio
             }
             return null;
         }
-        public int GetBlockID(int bundle)
+        public static int GetBlockID(int bundle)
         {
             if (BlockInfoMap.TryGetValue(bundle, out var block))
             {
@@ -183,12 +193,8 @@ namespace AssetStudio
             }
             else return 0;
         }
-        public List<int> GetBundleDep(int bundle)
-        {
-            if (BundleDependencyMap.TryGetValue(bundle, out var dep)) return dep;
-            else return null;
-        }
-        public bool CheckIsLegitAssetPath(ulong hash)
+        public static List<int> GetBundleDep(int bundle) => BundleDependencyMap.TryGetValue(bundle, out var dep) ? dep : new List<int>();
+        public static bool CheckIsLegitAssetPath(ulong hash)
         {
             var asset = new Asset(hash);
             return AssetLocationMap[asset.Pre].ContainsKey(asset.Last);
@@ -229,33 +235,6 @@ namespace AssetStudio
         {
             Id = id;
             Offset = offset;
-        }
-    }
-    public class BlockInfo : IComparable<BlockInfo>
-    {
-        public string Path;
-        public long Offset;
-
-        public BlockInfo() : this("", 0) { }
-        public BlockInfo(string path, long offset)
-        {
-            Path = path;
-            Offset = offset;
-        }
-        public int CompareTo(BlockInfo other)
-        {
-            if (other == null) return 1;
-
-            int result;
-            if (other == null)
-                throw new ArgumentException("Object is not a BlockInfo");
-
-            result = Path.CompareTo(other.Path);
-
-            if (result == 0)
-                result = Offset.CompareTo(other.Offset);
-
-            return result;
         }
     }
     public class BlockFile

@@ -69,8 +69,8 @@ namespace AssetStudioGUI
             if (!TryExportFile(exportPath, item, ".shader", out var exportFullPath))
                 return false;
             var m_Shader = (Shader)item.Asset;
-            var str = m_Shader.Convert();
-            File.WriteAllText(exportFullPath, str);
+            var bytes = m_Shader.Convert();
+            File.WriteAllBytes(exportFullPath, bytes);
             return true;
         }
 

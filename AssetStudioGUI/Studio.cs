@@ -238,7 +238,7 @@ namespace AssetStudioGUI
                                     if (long.TryParse(m_Container.Key, out var containerValue))
                                     {
                                         var last = unchecked((uint)containerValue);
-                                        var path = assetsManager.resourceIndex.GetBundlePath(last);
+                                        var path = ResourceIndex.GetBundlePath(last);
                                         if (!string.IsNullOrEmpty(path))
                                         {
                                             containers.Add((m_AssetBundle.m_PreloadTable[k], path));
@@ -273,17 +273,17 @@ namespace AssetStudioGUI
                                         var blk = Convert.ToUInt64(blkName);
                                         var lastHex = uint.Parse(binName, NumberStyles.HexNumber);
                                         var blkHash = (blk << 32) | lastHex;
-                                        var index = assetsManager.resourceIndex.GetAssetIndex(blkHash);
-                                        var bundleInfo = assetsManager.resourceIndex.GetBundleInfo(index);
+                                        var index = ResourceIndex.GetAssetIndex(blkHash);
+                                        var bundleInfo = ResourceIndex.GetBundleInfo(index);
                                         path = bundleInfo != null ? bundleInfo.Path : "";
                                     }
                                     else
                                     {
                                         var last = uint.Parse(binName, NumberStyles.HexNumber);
-                                        path = assetsManager.resourceIndex.GetBundlePath(last) ?? "";
+                                        path = ResourceIndex.GetBundlePath(last) ?? "";
                                     }
                                     assetItem.Container = path;
-                                    assetItem.Text = !string.IsNullOrEmpty(assetItem.Text) ? Path.GetFileName(path) : binName;
+                                    assetItem.Text = !string.IsNullOrEmpty(path) ? Path.GetFileName(path) : binName;
                                 } 
                             }
                             else assetItem.Text = string.Format("BinFile #{0}", assetItem.m_PathID);

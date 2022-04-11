@@ -17,10 +17,17 @@ namespace AssetStudio
 
         public FileReader(string path) : this(path, File.Open(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite)) { }
 
-        public FileReader(string path, Stream stream, long mhy0Pos = -1) : base(stream, EndianType.BigEndian, mhy0Pos)
+        public FileReader(string path, Stream stream) : base(stream, EndianType.BigEndian)
         {
             FullPath = Path.GetFullPath(path);
             FileName = Path.GetFileName(path);
+            FileType = CheckFileType();
+            Length = stream.Length;
+        }
+        public FileReader(Stream stream) : base(stream, EndianType.BigEndian)
+        {
+            FullPath = "";
+            FileName = "";
             FileType = CheckFileType();
             Length = stream.Length;
         }

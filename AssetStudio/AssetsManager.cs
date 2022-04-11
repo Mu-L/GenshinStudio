@@ -12,10 +12,7 @@ namespace AssetStudio
     public class AssetsManager
     {
         public string SpecifyUnityVersion;
-        public Dictionary<string, BlockInfo> BLKMap = new Dictionary<string, BlockInfo>();
-        public Dictionary<string, string> CABMap = new Dictionary<string, string>();
         public List<SerializedFile> assetsFileList = new List<SerializedFile>();
-        public ResourceIndex resourceIndex = new ResourceIndex();
 
         internal Dictionary<string, int> assetsFileIndexCache = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
         internal Dictionary<string, BinaryReader> resourceFileReaders = new Dictionary<string, BinaryReader>(StringComparer.OrdinalIgnoreCase);
@@ -24,168 +21,10 @@ namespace AssetStudio
         private HashSet<string> importFilesHash = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         private HashSet<string> assetsFileListHash = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
-        public void BuildBlkMap(List<string> files)
-        {
-            Logger.Info(string.Format("Building BLKMap"));
-            try
-            {
-                var collision = 0;
-                var offsets = new List<long>();
-                BLKMap.Clear();
-                Progress.Reset();
-                for (int i = 0; i < files.Count; i++)
-                {
-                    var file = files[i];
-                    using (var reader = new FileReader(file))
-                    {
-                        var blkfile = new BlkFile(reader);
-                        foreach (var mhy0 in blkfile.Files)
-                        {
-                            foreach (var f in mhy0.fileList)
-                            {
-                                if (BLKMap.ContainsKey(f.path))
-                                {
-                                    collision += 1;
-                                    continue;
-                                }
-                                BLKMap.Add(f.path, new BlockInfo(file, mhy0.OriginalPos));
-                            }
-                        }
-                    }
-                    Progress.Report(i + 1, files.Count);
-                }
-
-                BLKMap = BLKMap.OrderBy(pair => pair.Value).ToDictionary(pair => pair.Key, pair => pair.Value);
-                var outputFile = new FileInfo(@"BLKMap.bin");
-
-                using (var binaryFile = outputFile.Create())
-                using (var writter = new BinaryWriter(binaryFile))
-                {
-                    writter.Write(BLKMap.Count);
-                    foreach (var cab in BLKMap)
-                    {
-                        writter.Write(cab.Key);
-                        writter.Write(cab.Value.Path);
-                        writter.Write(cab.Value.Offset);
-                    }
-                }
-                Logger.Info($"BLKMap build successfully with {collision} collisions !!");
-            }
-            catch (Exception e)
-            {
-                Logger.Warning($"BLKMap was not build, {e.Message}");
-            }
-        }
-        public void LoadBlkMap()
-        {
-            Logger.Info(string.Format("Loading BLKMap"));
-            try
-            {
-                BLKMap.Clear();
-                using (var binaryFile = File.OpenRead("BLKMap.bin"))
-                using (var reader = new BinaryReader(binaryFile))
-                {
-                    var count = reader.ReadInt32();
-                    BLKMap = new Dictionary<string, BlockInfo>(count);
-                    for (int i = 0; i < count; i++)
-                    {
-                        var cab = reader.ReadString();
-                        var path = reader.ReadString();
-                        var offset = reader.ReadInt64();
-                        BLKMap.Add(cab, new BlockInfo(path, offset));
-                    }
-                }
-                Logger.Info(string.Format("Loaded BLKMap !!"));
-            }
-            catch (Exception e)
-            {
-                Logger.Warning($"BLKMap was not loaded, {e.Message}");
-            }
-        }
-        public void BuildCABMap(List<string> files)
-        {
-            Logger.Info(string.Format("Building CABMap"));
-            try
-            {
-                var collision = 0;
-                var offsets = new List<long>();
-                CABMap.Clear();
-                Progress.Reset();
-                for (int i = 0; i < files.Count; i++)
-                {
-                    var file = files[i];
-                    if (CABMap.ContainsKey(Path.GetFileNameWithoutExtension(file)))
-                    {
-                        collision += 1;
-                        continue;
-                    }
-                    CABMap.Add(Path.GetFileNameWithoutExtension(file), file);
-                    Progress.Report(i + 1, files.Count);
-                }
-
-                CABMap = CABMap.OrderBy(pair => pair.Value).ToDictionary(pair => pair.Key, pair => pair.Value);
-                var outputFile = new FileInfo(@"CABMap.bin");
-
-                using (var binaryFile = outputFile.Create())
-                using (var writter = new BinaryWriter(binaryFile))
-                {
-                    writter.Write(CABMap.Count);
-                    foreach (var cab in CABMap)
-                    {
-                        writter.Write(cab.Key);
-                        writter.Write(cab.Value);
-                    }
-                }
-                Logger.Info($"CABMap build successfully with {collision} collisions !!");
-            }
-            catch (Exception e)
-            {
-                Logger.Warning($"CABMap was not build, {e.Message}");
-            }
-        }
-        public void LoadCABMap()
-        {
-            Logger.Info(string.Format("Loading CABMap"));
-            try
-            {
-                CABMap.Clear();
-                using (var binaryFile = File.OpenRead("CABMap.bin"))
-                using (var reader = new BinaryReader(binaryFile))
-                {
-                    var count = reader.ReadInt32();
-                    CABMap = new Dictionary<string, string>(count);
-                    for (int i = 0; i < count; i++)
-                    {
-                        var key = reader.ReadString();
-                        var value = reader.ReadString();
-                        CABMap.Add(key, value);
-                    }
-                }
-                Logger.Info(string.Format("Loaded CABMap !!"));
-            }
-            catch (Exception e)
-            {
-                Logger.Warning($"CABMap was not loaded, {e.Message}");
-            }
-        }
-        public async Task<bool> LoadAIJSON(string file)
-        {
-            Logger.Info(string.Format("Loading AssetIndex JSON"));
-            try
-            {
-                return await resourceIndex.FromFile(file);
-            }
-            catch (Exception e)
-            {
-                Logger.Error("AssetIndex JSON was not loaded");
-                Console.WriteLine(e.ToString());
-                return false;
-            }
-        }
-
         public void LoadFiles(params string[] files)
         {
             var path = Path.GetDirectoryName(Path.GetFullPath(files[0]));
+            AsbManager.ProcessDependancies(ref files);
             MergeSplitAssets(path);
             var toReadFile = ProcessingSplitFiles(files.ToList());
             Load(toReadFile);
@@ -194,8 +33,10 @@ namespace AssetStudio
         public void LoadFolder(string path)
         {
             MergeSplitAssets(path, true);
-            var files = Directory.GetFiles(path, "*.*", SearchOption.AllDirectories).ToList();
-            var toReadFile = ProcessingSplitFiles(files);
+            var files = Directory.GetFiles(path, "*.*", SearchOption.AllDirectories).ToArray();
+            AsbManager.ProcessDependancies(ref files);
+            var filesList = files.ToList();
+            var toReadFile = ProcessingSplitFiles(filesList);
             Load(toReadFile);
         }
 
@@ -218,6 +59,7 @@ namespace AssetStudio
             importFiles.Clear();
             importFilesHash.Clear();
             assetsFileListHash.Clear();
+            AsbManager.offsets.Clear();
 
             ReadAssets();
             ProcessAssets();
@@ -268,34 +110,6 @@ namespace AssetStudio
                     CheckStrippedVersion(assetsFile);
                     assetsFileList.Add(assetsFile);
                     assetsFileListHash.Add(assetsFile.fileName);
-
-                    foreach (var sharedFile in assetsFile.m_Externals)
-                    {
-                        var sharedFileName = sharedFile.fileName;
-
-                        if (!importFilesHash.Contains(sharedFileName))
-                        {
-                            var sharedFilePath = Path.Combine(Path.GetDirectoryName(reader.FullPath), sharedFileName);
-                            if (!File.Exists(sharedFilePath))
-                            {
-                                var findFiles = Directory.GetFiles(Path.GetDirectoryName(reader.FullPath), sharedFileName, SearchOption.AllDirectories);
-                                if (findFiles.Length > 0)
-                                {
-                                    sharedFilePath = findFiles[0];
-                                }
-                                else
-                                {
-                                    CABMap.TryGetValue(sharedFileName, out sharedFilePath);
-                                }
-                            }
-
-                            if (File.Exists(sharedFilePath))
-                            {
-                                importFiles.Add(sharedFilePath);
-                                importFilesHash.Add(sharedFileName);
-                            }
-                        }
-                    }
                 }
                 catch (Exception e)
                 {
@@ -510,13 +324,11 @@ namespace AssetStudio
 
         private void LoadBlkFile(FileReader reader)
         {
-            if (reader.MHY0Pos == -1)
-                Logger.Info("Loading " + reader.FileName);
-            else
-                Logger.Info("Loading mhy0 in " + reader.FileName + " at " + string.Format("0x{0:x8}", reader.MHY0Pos));
+            Logger.Info("Loading " + reader.FileName);
             try
             {
                 BlkFile blkFile;
+                reader.MHY0Pos = AsbManager.offsets[reader.FullPath].ToArray();
                 blkFile = new BlkFile(reader);
                 foreach (var mhy0 in blkFile.Files)
                 {
@@ -530,41 +342,6 @@ namespace AssetStudio
                             CheckStrippedVersion(assetsFile);
                             assetsFileList.Add(assetsFile);
                             assetsFileListHash.Add(assetsFile.fileName);
-
-                            foreach (var sharedFile in assetsFile.m_Externals)
-                            {
-                                var sharedFileName = sharedFile.fileName;
-
-                                if (!importFilesHash.Contains(sharedFileName))
-                                {
-                                    var sharedFilePath = Path.Combine(Path.GetDirectoryName(reader.FullPath), sharedFileName);
-                                    var blockInfo = new BlockInfo();
-
-                                    if (!File.Exists(sharedFilePath))
-                                    {
-                                        var findFiles = Directory.GetFiles(Path.GetDirectoryName(reader.FullPath), sharedFileName, SearchOption.AllDirectories);
-                                        if (findFiles.Length > 0)
-                                        {
-                                            sharedFilePath = findFiles[0];
-                                        }
-                                        else
-                                        {
-                                            if (BLKMap.TryGetValue(sharedFileName, out blockInfo))
-                                                sharedFilePath = blockInfo.Path;
-                                        }
-                                    }
-
-                                    if (File.Exists(sharedFilePath))
-                                    {
-                                        using (Stream shardFileReader = File.OpenRead(sharedFilePath))
-                                        {
-                                            FileReader fileReader = new FileReader(sharedFilePath, shardFileReader, blockInfo.Offset);
-                                            LoadFile(fileReader);
-                                            importFilesHash.Add(sharedFileName);
-                                        }
-                                    }
-                                }
-                            }
                         }
                         else
                         {

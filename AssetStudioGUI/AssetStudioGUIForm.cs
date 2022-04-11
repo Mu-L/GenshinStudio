@@ -151,8 +151,8 @@ namespace AssetStudioGUI
             Progress.Default = new GUIProgress(SetProgressBarValue);
             Studio.StatusStripUpdate = StatusStripUpdate;
             specifyAIVersion.Items.AddRange(versionManager.GetVersions());
-            assetsManager.LoadBlkMap();
-            assetsManager.LoadCABMap();
+            AsbManager.LoadBLKMap();
+            AsbManager.LoadCABMap();
         }
         ~AssetStudioGUIForm()
         {
@@ -775,7 +775,7 @@ namespace AssetStudioGUI
                         PreviewAudioClip(assetItem, m_AudioClip);
                         break;
                     case Shader m_Shader:
-                        PreviewShader(m_Shader);
+                        StatusStripUpdate("Only supported export.");
                         break;
                     case TextAsset m_TextAsset:
                         PreviewTextAsset(m_TextAsset);
@@ -1014,11 +1014,11 @@ namespace AssetStudioGUI
             FMODtimerLabel.Text = $"0:0.0 / {FMODlenms / 1000 / 60}:{FMODlenms / 1000 % 60}.{FMODlenms / 10 % 100}";
         }
 
-        private void PreviewShader(Shader m_Shader)
-        {
-            var str = ShaderConverter.Convert(m_Shader);
-            PreviewText(str == null ? "Serialized Shader can't be read" : str.Replace("\n", "\r\n"));
-        }
+        //private void PreviewShader(Shader m_Shader)
+        //{
+        //    var strBytes = ShaderConverter.Convert(m_Shader);
+        //    PreviewText(strBytes.Length == 0 ? "Serialized Shader can't be read" : Encoding.UTF8.GetString(strBytes).Replace("\n", "\r\n"));
+        //}
 
         private void PreviewTextAsset(TextAsset m_TextAsset)
         {
@@ -2147,7 +2147,7 @@ namespace AssetStudioGUI
                 Logger.Info("scanning for BLK files");
                 var files = Directory.GetFiles(openFolderDialog.Folder, "*.blk", SearchOption.AllDirectories).ToList();
                 Logger.Info(string.Format("found {0} BLK files", files.Count()));
-                await Task.Run(() => assetsManager.BuildBlkMap(files));
+                await Task.Run(() => AsbManager.BuildBLKMap(openFolderDialog.Folder, files));
             }
         }
 
@@ -2160,7 +2160,7 @@ namespace AssetStudioGUI
                 Logger.Info("scanning for CAB files");
                 var files = Directory.GetFiles(openFolderDialog.Folder, "CAB-*", SearchOption.AllDirectories).ToList();
                 Logger.Info(string.Format("found {0} CAB files", files.Count()));
-                await Task.Run(() => assetsManager.BuildCABMap(files));
+                await Task.Run(() => AsbManager.BuildCABMap(openFolderDialog.Folder, files));
             }
         }
 
@@ -2187,7 +2187,7 @@ namespace AssetStudioGUI
                 
                 File.WriteAllText(path, json);
             }
-            var loaded = await assetsManager.LoadAIJSON(path);
+            var loaded = await ResourceIndex.FromFile(path);
             if (loaded)
                 Logger.Info("AssetIndex loaded successfully !!");
             SpecifyAIVersionUpdate(true);

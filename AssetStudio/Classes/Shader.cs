@@ -982,10 +982,9 @@ namespace AssetStudio
                     compressedLengths = reader.ReadUInt32Array();
                     decompressedLengths = reader.ReadUInt32Array();
                 }
-                var negativeBlob = reader.ReadUInt8Array();
-                reader.AlignStream();
                 compressedBlob = reader.ReadUInt8Array();
-                reader.AlignStream();
+                if (BitConverter.ToInt32(compressedBlob, 0) == -1)
+                    compressedBlob = reader.ReadUInt8Array();
                 
                 var m_DependenciesCount = reader.ReadInt32();
                 for (int i = 0; i < m_DependenciesCount; i++)
