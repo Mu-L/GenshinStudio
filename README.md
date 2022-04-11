@@ -21,7 +21,7 @@ CAB Method:
 ```
 1. Extract blks to a specific location (File -> Extract folder).
 2. Build CAB Map (Misc. -> Build CABMap).
-3. Load AssetIndex file: (Options -> Specify AI version) online or (Misc. -> Select AI JSON) generated locally.
+3. Load CAB files.
 ```
 BLK Method:
 ```
