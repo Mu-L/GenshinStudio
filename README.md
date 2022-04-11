@@ -29,11 +29,7 @@ BLK Method:
 2. Load BLK files.
 ```
 
-~~NOTE: to generate the .json file locally, use [AssetIndexReader](https://github.com/Razmoth/AssetIndexReader) CLI tool with binary asset_index file, which can be found in 31049740.blk.
-Extract it using `File -> Extract File` in [GenshinStudio](https://github.com/Razmoth/GenshinStudio), then used the resulted `.bin` file in [this](https://github.com/Razmoth/AssetIndexReader) tool, should work.
-[Make sure XOR key is turned off in `Export Options`]~~
-
-NOTE: ![AssetIndexReader](https://github.com/Razmoth/AssetIndexReader) support has been dropped to avoid breaking compatibility, also 2.5.0 assets causes an breaking ![issue](https://github.com/khang06/AssetStudio/issues/11), make sure to enable `Disable Renderer` option in `Export Options` before loading 2.5.0 assets.
+NOTE: in case of any `MeshRenderer/SkinnedMeshRenderer` errors, make sure to enable `Disable Renderer` option in `Export Options` before loading assets.
 
 Looking forward for feedback for issues/bugs to fix and update.
 _____________________________________________________________________________________________________________________________
