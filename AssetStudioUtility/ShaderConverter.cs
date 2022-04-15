@@ -23,6 +23,7 @@ namespace AssetStudio
                     using (var blobReader = new EndianBinaryReader(new MemoryStream(decompressedBytes), EndianType.LittleEndian))
                     {
                         var program = new ShaderProgram(blobReader, shader.version);
+                        program.Read(blobReader, 0);
                         writer.Write(program.Export(Encoding.UTF8.GetString(shader.m_Script)));
                         return ms.ToArray();
                     }
@@ -41,14 +42,24 @@ namespace AssetStudio
 
         private static void ConvertSerializedShader(Shader shader, TextWriter writer)
         {
-            var shaderPrograms = new ShaderProgram[shader.platforms.Length];
-            for (var i = 0; i < shader.platforms.Length; i++)
+            var length = shader.platforms.Length;
+            var shaderPrograms = new ShaderProgram[length];
+            for (var i = 0; i < length; i++)
             {
-                var decompressedBytes = new byte[shader.compressedLengths[i]];
-                Buffer.BlockCopy(shader.compressedBlob, (int)shader.offsets[i], decompressedBytes, 0, (int)shader.compressedLengths[i]);
-                using (var blobReader = new EndianBinaryReader(new MemoryStream(decompressedBytes), EndianType.LittleEndian))
+                for (var j = 0; j < shader.offsets[i].Length; j++)
                 {
-                    shaderPrograms[i] = new ShaderProgram(blobReader, shader.version);
+                    var offset = shader.offsets[i][j];
+                    var decompressedLength = shader.decompressedLengths[i][j];
+                    var decompressedBytes = new byte[decompressedLength];
+                    Buffer.BlockCopy(shader.compressedBlob, (int)offset, decompressedBytes, 0, (int)decompressedLength);
+                    using (var blobReader = new EndianBinaryReader(new MemoryStream(decompressedBytes), EndianType.LittleEndian))
+                    {
+                        if (j == 0)
+                        {
+                            shaderPrograms[i] = new ShaderProgram(blobReader, shader.version);
+                        }
+                        shaderPrograms[i].Read(blobReader, j);
+                    }
                 }
             }
 
@@ -841,30 +852,37 @@ namespace AssetStudio
                                       "///////////////////////////////////////////\n";
     }
 
+    public class ShaderSubProgramEntry
+    {
+        public int Offset;
+        public int Length;
+        public int Segment;
+
+        public ShaderSubProgramEntry(BinaryReader reader, int[] version)
+        {
+            Offset = reader.ReadInt32();
+            Length = reader.ReadInt32();
+            if (version[0] > 2019 || (version[0] == 2019 && version[1] >= 3)) //2019.3 and up
+            {
+                Segment = reader.ReadInt32();
+            }
+        }
+    }
+
     public class ShaderProgram
     {
+        public ShaderSubProgramEntry[] entries;
         public ShaderSubProgram[] m_SubPrograms;
 
         public ShaderProgram(EndianBinaryReader reader, int[] version)
         {
             var subProgramsCapacity = reader.ReadInt32();
-            m_SubPrograms = new ShaderSubProgram[subProgramsCapacity];
-            int entrySize;
-            if (version[0] > 2019 || (version[0] == 2019 && version[1] >= 3)) //2019.3 and up
-            {
-                entrySize = 12;
-            }
-            else
-            {
-                entrySize = 8;
-            }
+            entries = new ShaderSubProgramEntry[subProgramsCapacity];
             for (int i = 0; i < subProgramsCapacity; i++)
             {
-                reader.BaseStream.Position = 4 + i * entrySize;
-                var offset = reader.ReadInt32();
-                reader.BaseStream.Position = offset;
-                m_SubPrograms[i] = new ShaderSubProgram(reader);
+                entries[i] = new ShaderSubProgramEntry(reader, version);
             }
+            m_SubPrograms = new ShaderSubProgram[subProgramsCapacity];
         }
 
         public string Export(string shader)
@@ -876,6 +894,18 @@ namespace AssetStudio
             });
             shader = Regex.Replace(shader, "GpuProgramIndex (.+)", evaluator);
             return shader;
+        }
+        public void Read(EndianBinaryReader reader, int segment)
+        {
+            for (int i = 0; i < entries.Length; i++)
+            {
+                var entry = entries[i];
+                if (entry.Segment == segment)
+                {
+                    reader.BaseStream.Position = entry.Offset;
+                    m_SubPrograms[i] = new ShaderSubProgram(reader);
+                }
+            }
         }
     }
 

@@ -429,7 +429,7 @@ namespace AssetStudio
             if ((version[0] == 2020 && version[1] > 3) ||
                (version[0] == 2020 && version[1] == 3 && version[2] >= 2) || //2020.3.2f1 and up
                (version[0] == 2021 && version[1] > 1) ||
-               (version[0] == 2021 && version[1] == 1 && version[2] >= 4)) //2021.1.4f1 and up
+               (version[0] == 2021 && version[1] == 1 && version[2] >= 1)) //2021.1.1f1 and up
             {
                 m_IsPartialCB = reader.ReadBoolean();
                 reader.AlignStream();
@@ -605,7 +605,7 @@ namespace AssetStudio
             if ((version[0] == 2020 && version[1] > 3) ||
                (version[0] == 2020 && version[1] == 3 && version[2] >= 2) || //2020.3.2f1 and up
                (version[0] == 2021 && version[1] > 1) ||
-               (version[0] == 2021 && version[1] == 1 && version[2] >= 4)) //2021.1.4f1 and up
+               (version[0] == 2021 && version[1] == 1 && version[2] >= 1)) //2021.1.1f1 and up
             {
                 m_Parameters = new SerializedProgramParameters(reader);
             }
@@ -959,9 +959,9 @@ namespace AssetStudio
         //5.5 and up
         public SerializedShader m_ParsedForm;
         public ShaderCompilerPlatform[] platforms;
-        public uint[] offsets;
-        public uint[] compressedLengths;
-        public uint[] decompressedLengths;
+        public uint[][] offsets;
+        public uint[][] compressedLengths;
+        public uint[][] decompressedLengths;
         public byte[] compressedBlob;
 
         public Shader(ObjectReader reader) : base(reader)
@@ -972,15 +972,15 @@ namespace AssetStudio
                 platforms = reader.ReadUInt32Array().Select(x => (ShaderCompilerPlatform)x).ToArray();
                 if (version[0] > 2019 || (version[0] == 2019 && version[1] >= 3)) //2019.3 and up
                 {
-                    offsets = reader.ReadUInt32ArrayArray().Select(x => x[0]).ToArray();
-                    compressedLengths = reader.ReadUInt32ArrayArray().Select(x => x[0]).ToArray();
-                    decompressedLengths = reader.ReadUInt32ArrayArray().Select(x => x[0]).ToArray();
+                    offsets = reader.ReadUInt32ArrayArray();
+                    compressedLengths = reader.ReadUInt32ArrayArray();
+                    decompressedLengths = reader.ReadUInt32ArrayArray();
                 }
                 else
                 {
-                    offsets = reader.ReadUInt32Array();
-                    compressedLengths = reader.ReadUInt32Array();
-                    decompressedLengths = reader.ReadUInt32Array();
+                    offsets = reader.ReadUInt32Array().Select(x => new[] { x }).ToArray();
+                    compressedLengths = reader.ReadUInt32Array().Select(x => new[] { x }).ToArray();
+                    decompressedLengths = reader.ReadUInt32Array().Select(x => new[] { x }).ToArray();
                 }
                 compressedBlob = reader.ReadUInt8Array();
                 if (BitConverter.ToInt32(compressedBlob, 0) == -1)

@@ -14,12 +14,10 @@ namespace AssetStudioGUI
 
         internal DialogResult ShowDialog(IWin32Window owner = null)
         {
-#if NETFRAMEWORK
             if (Environment.OSVersion.Version.Major >= 6)
             {
                 return ShowVistaDialog(owner);
             }
-#endif
             return ShowFolderBrowserDialog(owner);
         }
 
