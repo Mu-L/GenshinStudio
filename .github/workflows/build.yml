@@ -40,17 +40,17 @@ jobs:
       - name: Upload .Net472 Artifact
         uses: actions/upload-artifact@v2
         with:
-          name: AssetStudio.net472
+          name: net472
           path: AssetStudioGUI/bin/Release/net472
 
       - name: Upload .Net5 Artifact
         uses: actions/upload-artifact@v2
         with:
-          name: AssetStudio.net5
+          name: net5.0-windows
           path: AssetStudioGUI/bin/Release/net5.0-windows/publish
 
       - name: Upload .Net6 Artifact
         uses: actions/upload-artifact@v2
         with:
-          name: AssetStudio.net6
+          name: net6.0-windows
           path: AssetStudioGUI/bin/Release/net6.0-windows/publish
