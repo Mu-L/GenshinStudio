@@ -52,6 +52,17 @@
 		</ContentWithTargetPath>
 	</ItemGroup>
 
+	<ItemGroup>
+		<ContentWithTargetPath Include="Libraries\x86\acl.dll">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+			<TargetPath>x86\acl.dll</TargetPath>
+		</ContentWithTargetPath>
+		<ContentWithTargetPath Include="Libraries\x64\acl.dll">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+			<TargetPath>x64\acl.dll</TargetPath>
+		</ContentWithTargetPath>
+	</ItemGroup>
+
 	<ItemGroup Condition=" '$(TargetFramework)' != 'net472' ">
 		<PackageReference Include="OpenTK" Version="4.6.7" />
 		<Reference Include="OpenTK.WinForms">
@@ -67,7 +78,7 @@
 	<ItemGroup>
 		<PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
 	</ItemGroup>
-
+	
 	<Target Name="CopyExtraFiles" AfterTargets="AfterBuild">
 		<Copy SourceFiles="$(SolutionDir)AssetStudioFBXNative\bin\Win32\$(Configuration)\AssetStudioFBXNative.dll" DestinationFolder="$(TargetDir)x86" ContinueOnError="true" />
 		<Copy SourceFiles="$(SolutionDir)AssetStudioFBXNative\bin\x64\$(Configuration)\AssetStudioFBXNative.dll" DestinationFolder="$(TargetDir)x64" ContinueOnError="true" />

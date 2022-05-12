@@ -1038,8 +1038,6 @@ namespace AssetStudio
             {
                 m_MuscleClipSize = reader.ReadUInt32();
                 m_MuscleClip = new ClipMuscleConstant(reader);
-                if (m_MuscleClip.m_Clip.m_ACLClip.m_CurveCount == 0)
-                    Logger.Info($"AnimationClip {m_Name} is exportable !!");
             }
             if (version[0] > 4 || (version[0] == 4 && version[1] >= 3)) //4.3 and up
             {
