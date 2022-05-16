@@ -3,10 +3,12 @@ name: GSBuild
 on:
   push:
     branches: [ master ]
-    tags: [ '*' ]
+    tags:        
+      - '*'
   pull_request:
     branches: [ master ]
-    tags: [ '*' ]
+    tags: 
+      - '*'
 
   workflow_dispatch:
 
