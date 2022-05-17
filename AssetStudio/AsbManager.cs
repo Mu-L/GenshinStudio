@@ -2,9 +2,6 @@
 using System.IO;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using static AssetStudio.ImportHelper;
 
 namespace AssetStudio
 {
@@ -24,9 +21,6 @@ namespace AssetStudio
         public static Dictionary<string, CABEntry> CABMap = new Dictionary<string, CABEntry>();
         public static Dictionary<string, HashSet<long>> offsets = new Dictionary<string, HashSet<long>>();
 
-        public static string BLKBasePath;
-        public static string CABBasePath;
-
         public static void BuildBLKMap(string path, List<string> files)
         {
             Logger.Info(string.Format("Building BLKMap"));
@@ -34,7 +28,6 @@ namespace AssetStudio
             {
                 BLKMap.Clear();
                 Progress.Reset();
-                BLKBasePath = files.Count > 0 ? path : "";
                 for (int i = 0; i < files.Count; i++)
                 {
                     var file = files[i];
@@ -59,8 +52,7 @@ namespace AssetStudio
                                             BLKMap.Add(asb.m_Name, new BLKEntry());
                                             BLKMap[asb.m_Name].Dependancies.AddRange(asb.m_Dependencies);
                                         }    
-                                        var relativePath = GetRelativePath(BLKBasePath, file);
-                                        BLKMap[asb.m_Name].Location.Add(relativePath, mhy0.OriginalPos); 
+                                        BLKMap[asb.m_Name].Location.Add(file, mhy0.OriginalPos); 
                                     }
                                 }
                             }
@@ -75,7 +67,6 @@ namespace AssetStudio
                 using (var binaryFile = outputFile.Create())
                 using (var writter = new BinaryWriter(binaryFile))
                 {
-                    writter.Write(BLKBasePath);
                     writter.Write(BLKMap.Count);
                     foreach (var blk in BLKMap)
                     {
@@ -107,7 +98,6 @@ namespace AssetStudio
                 using (var binaryFile = File.OpenRead("BLKMap.bin"))
                 using (var reader = new BinaryReader(binaryFile))
                 {
-                    BLKBasePath = reader.ReadString();
                     var count = reader.ReadInt32();
                     BLKMap = new Dictionary<string, BLKEntry>(count);
                     for (int i = 0; i < count; i++)
@@ -145,7 +135,6 @@ namespace AssetStudio
             {
                 CABMap.Clear();
                 Progress.Reset();
-                CABBasePath = files.Count > 0 ? path : "";
                 for (int i = 0; i < files.Count; i++)
                 {
                     var file = files[i];
@@ -163,8 +152,7 @@ namespace AssetStudio
                                 CABMap.Add(asb.m_Name, new CABEntry());
                                 CABMap[asb.m_Name].Dependancies.AddRange(asb.m_Dependencies);
                             }
-                            var relativePath = GetRelativePath(CABBasePath, file);
-                            CABMap[asb.m_Name].Location.Add(relativePath);
+                            CABMap[asb.m_Name].Location.Add(file);
                         }
                     }
                     Progress.Report(i + 1, files.Count);
@@ -176,7 +164,6 @@ namespace AssetStudio
                 using (var binaryFile = outputFile.Create())
                 using (var writter = new BinaryWriter(binaryFile))
                 {
-                    writter.Write(CABBasePath);
                     writter.Write(CABMap.Count);
                     foreach (var cab in CABMap)
                     {
@@ -207,7 +194,6 @@ namespace AssetStudio
                 using (var binaryFile = File.OpenRead("CABMap.bin"))
                 using (var reader = new BinaryReader(binaryFile))
                 {
-                    CABBasePath = reader.ReadString();
                     var count = reader.ReadInt32();
                     CABMap = new Dictionary<string, CABEntry>(count);
                     for (int i = 0; i < count; i++)
@@ -240,7 +226,7 @@ namespace AssetStudio
             if (BLKMap.TryGetValue(asb, out var asbEntry))
             {
                 var locationPair = asbEntry.Location.Pick(offsets.LastOrDefault().Key);
-                var path = Path.Combine(BLKBasePath, locationPair.Key);
+                var path = locationPair.Key;
                 if (!offsets.ContainsKey(path))
                     offsets.Add(path, new HashSet<long>());
                 offsets[path].Add(locationPair.Value);
@@ -253,8 +239,7 @@ namespace AssetStudio
         {
             if (CABMap.TryGetValue(asb, out var entry))
             {
-                var cab = entry.Location.Pick(files.LastOrDefault());
-                var path = Path.Combine(CABBasePath, cab);
+                var path = entry.Location.Pick(files.LastOrDefault());
                 if (!files.Any(x => x.Contains(Path.GetFileName(path))))
                     files.Add(path);
                 foreach (var dep in entry.Dependancies)
@@ -265,9 +250,8 @@ namespace AssetStudio
         public static bool FindAsbFromBLK(string path, out List<string> asbs)
         {
             asbs = new List<string>();
-            var relativePath = GetRelativePath(BLKBasePath, path);
             foreach (var pair in BLKMap)
-                if (pair.Value.Location.ContainsKey(relativePath))
+                if (pair.Value.Location.ContainsKey(path))
                     asbs.Add(pair.Key);
             return asbs.Count != 0;
         }
@@ -275,9 +259,8 @@ namespace AssetStudio
         public static bool FindAsbFromCAB(string path, out List<string> asbs)
         {
             asbs = new List<string>();
-            var relativePath = GetRelativePath(CABBasePath, path);
             foreach (var pair in CABMap)
-                if (pair.Value.Location.Contains(relativePath))
+                if (pair.Value.Location.Contains(path))
                     asbs.Add(pair.Key);
             return asbs.Count != 0;
         }
